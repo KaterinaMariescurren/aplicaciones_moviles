@@ -112,7 +112,7 @@
 
             <!-- Primer botón -->
             <Button
-                android:id="@+id/registrar"
+                android:id="@+id/iniciarsesion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Registrarse"
@@ -120,16 +120,6 @@
                 android:textColor="@color/accent"
                 android:textSize="17dp"
                 android:layout_marginBottom="8dp"/>
-
-            <!-- Segundo botón -->
-            <Button
-                android:id="@+id/iniciarsesion"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="¿Ya tenes cuenta? Inicia sesion"
-                android:background="@android:color/transparent"
-                android:textColor="@color/accent"
-                />
 
         </LinearLayout>
 

@@ -1,7 +1,10 @@
 package com.example.login
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -36,6 +39,18 @@ class bienvenida_activity : AppCompatActivity() {
 
         iosButton.setOnClickListener {
             logoImageView.setImageResource(R.drawable.ios_icono)
+        }
+        // Funcionalidad para mostrar el EditText cuando se selecciona el CheckBox "Otra"
+        val checkboxOtra: CheckBox = findViewById(R.id.checkbox_otra)
+        val edittextOther: EditText = findViewById(R.id.edittext_other)
+
+        // Configurar el OnCheckedChangeListener para el CheckBox "Otra"
+        checkboxOtra.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                edittextOther.visibility = View.VISIBLE
+            } else {
+                edittextOther.visibility = View.GONE
+            }
         }
     }
 }

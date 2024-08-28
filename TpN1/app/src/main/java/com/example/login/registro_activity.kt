@@ -25,10 +25,9 @@ class registro_activity : AppCompatActivity() {
         val emailEditText = findViewById<EditText>(R.id.email)
         val passwordEditText = findViewById<EditText>(R.id.password)
         val repeatpasswordEditText = findViewById<EditText>(R.id.repeatpassword)
-        val registerButton = findViewById<Button>(R.id.registrar)
         val loginButton = findViewById<Button>(R.id.iniciarsesion)
 
-        registerButton.setOnClickListener {
+        loginButton.setOnClickListener {
             val enteredUsername = usernameEditText.text.toString()
             val enteredEmail = emailEditText.text.toString()
             val enteredPassword = passwordEditText.text.toString()
@@ -68,10 +67,5 @@ class registro_activity : AppCompatActivity() {
             Toast.makeText(this, "Successful register", Toast.LENGTH_SHORT).show()
         }
 
-        loginButton.setOnClickListener{
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
     }
 }

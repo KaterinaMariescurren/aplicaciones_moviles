@@ -139,6 +139,7 @@
                 android:hint="Ingrese su preferencia"
                 android:visibility="gone" />
         </LinearLayout>
+
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
