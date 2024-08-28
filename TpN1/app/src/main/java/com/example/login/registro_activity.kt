@@ -60,7 +60,7 @@ class registro_activity : AppCompatActivity() {
 
 
             // Si se pasan todos los if se navega hacia el bienvenida
-            val intent = Intent(this, bienvenida_activity::class.java)
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
 
             // registro fue successful
