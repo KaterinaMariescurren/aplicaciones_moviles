@@ -1,6 +1,9 @@
 package com.example.login
 
 import android.os.Bundle
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -15,6 +18,24 @@ class bienvenida_activity : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+
+        val ussername = intent.getStringExtra("name")
+
+        val bienvenidaTextView = findViewById<TextView>(R.id.bienvenida)
+
+        bienvenidaTextView.text = String.format("Bienvenido %s a App Móvil", ussername)
+
+        val androidButton: Button = findViewById(R.id.androidButton)
+        val iosButton: Button = findViewById(R.id.iosButton)
+        val logoImageView: ImageView = findViewById(R.id.logoImageView)
+
+        androidButton.setOnClickListener {
+            logoImageView.setImageResource(R.drawable.android_icono)
+        }
+
+        iosButton.setOnClickListener {
+            logoImageView.setImageResource(R.drawable.ios_icono)
         }
     }
 }
