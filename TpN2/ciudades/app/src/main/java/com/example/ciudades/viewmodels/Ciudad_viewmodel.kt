@@ -9,11 +9,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ciudades.database.CiudadesDataBaseDAO
 import com.example.ciudades.entity.Ciudad
 import com.example.ciudades.states.Ciudades_states
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
-class Ciudad_viewmodel(private val dao : CiudadesDataBaseDAO) : ViewModel() {
+open class Ciudad_viewmodel(private val dao : CiudadesDataBaseDAO) : ViewModel() {
     var estado by mutableStateOf(Ciudades_states())
+    val ciudades: Flow<List<Ciudad>> = dao.listar_ciudades().flowOn(Dispatchers.IO)
 
     init{
         viewModelScope.launch{
@@ -28,8 +32,8 @@ class Ciudad_viewmodel(private val dao : CiudadesDataBaseDAO) : ViewModel() {
         dao.insertCiudad( ciudad )
     }
 
-    fun buscar_ciudad_nombre ( nombre_ciudad : String) = viewModelScope.launch  {
-        dao.buscarCiudadXNombre( nombre_ciudad )
+    fun buscar_ciudad_nombre ( nombre_ciudad : String) :Flow<List<Ciudad>>  {
+        return dao.buscarCiudadXNombre( nombre_ciudad )
     }
 
     fun eliminar_ciudad_nombre ( nombre_ciudad : String) = viewModelScope.launch  {
@@ -40,7 +44,14 @@ class Ciudad_viewmodel(private val dao : CiudadesDataBaseDAO) : ViewModel() {
         dao.eliminarCiudadXPais( nombre_pais )
     }
 
-    fun actualizar_poblacion ( id : Int , poblacion : Int ) = viewModelScope.launch  {
-        dao.actualizarPolacion( id, poblacion )
+    fun actualizar_poblacion ( nombre_ciudad : String , poblacion : Int ) = viewModelScope.launch  {
+
+        viewModelScope.launch {
+            buscar_ciudad_nombre(nombre_ciudad).collect { ciudades ->
+                for (ciudad in ciudades) {
+                    dao.actualizarPolacion(ciudad.id, poblacion)
+                }
+            }
+        }
     }
 }

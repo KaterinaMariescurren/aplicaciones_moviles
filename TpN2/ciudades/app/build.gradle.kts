@@ -68,7 +68,6 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:1.4.0")
 
 
-
     kapt("androidx.room:room-compiler:$room_version")  // Solo kapt para Kotlin
     implementation("androidx.room:room-ktx:$room_version")  // Room con Coroutines (KTX)
 
