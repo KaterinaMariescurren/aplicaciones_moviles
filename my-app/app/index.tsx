@@ -1,6 +1,8 @@
 import CustomButton from '@/components/CustomButtom';
 import CustomHeader from '@/components/CustomHeader';
-import CustomList from '@/components/CustomList';
+import CustomCarList from '@/components/CustomCarList';
+import CustomEstacList from '@/components/CustomEstacList';
+
 
 import React from 'react';
 import { View, Text, StyleSheet, Image, Dimensions, PixelRatio } from 'react-native';
@@ -26,12 +28,12 @@ export default function App() {
         <Text style={styles.cardContent}>
           ¿Queres cargar un estacionamiento?
         </Text>
-        <CustomButton title='Si'></CustomButton>      
+        <CustomButton title='Si' style={{width:'100%',paddingVertical:13,}}></CustomButton>      
       </View>
-      <CustomList></CustomList>
-      <CustomList></CustomList>
+      <CustomCarList></CustomCarList>
+      <CustomEstacList></CustomEstacList>
       <View style={styles.footer}>
-        <Text style={styles.cardContent}>¿Queres ver la zona de estacionamiento medido y puntos de cargas?</Text>
+        <Text style={styles.footerContent}>¿Queres ver la zona de estacionamiento medido y puntos de cargas?</Text>
       </View>
     </View>
   );
@@ -40,18 +42,13 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: '100%',
-    height: '100%',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-  },
+    },
   imageContainer: {
-    width: '90%', // Ancho del contenedor
-    height: height*0.25, // Ajusta la altura según sea necesario
+    width: '70%', // Ancho del contenedor
+    height: '20%', // Ajusta la altura según sea necesario
     justifyContent: 'center', // Centra la imagen
     alignItems: 'center', // Centra la imagen
-    marginTop: normalize(75), // Espacio superior para separar del encabezado
+    marginTop: height*0.10, // Espacio superior para separar del encabezado
     alignSelf: 'center', // Centra el contenedor de la imagen horizontalmente
     overflow: 'hidden', // Asegúrate de que no se corte
   },
@@ -63,27 +60,23 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
     width:'90%',
-    marginVertical: 36,
+    height:'20%',
+    alignSelf: 'center', 
+    justifyContent: 'center', 
     padding: 22.8,
+    marginVertical:26,
     borderRadius: 24,
-    shadowColor: '#000',
+    borderColor:'#656CEE',
+    shadowColor: '#8B91FC',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    elevation: 24,
   },
-  footer: {
-    backgroundColor: '#fff',
-    padding: normalize(10),
-    marginHorizontal:7,
-    borderTopLeftRadius: 20, // Radio de esquina inferior izquierda
-    borderTopRightRadius: 20, // Radio de esquina inferior derecha
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-    alignItems: 'center',
+  cardContent: {
+    textAlign: 'center', 
+    fontSize: normalize(14),
+    color: '#333',
+    marginBottom: normalize(20),
   },
   cardTitle: {
     textAlign: 'center', 
@@ -91,10 +84,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: normalize(10),
   },
-  cardContent: {
+  footer: {
+    height:'10%',
+    width:'95%',
+    alignSelf: 'center', 
+    justifyContent: 'center',  
+    position: 'absolute',
+    bottom: 0, // Pega el contenedor al fondo de la pantalla
+    padding:'2.5%',
+    backgroundColor: '#fff',
+    borderColor:'#656CEE',
+    borderWidth:0.3,
+    shadowColor: '#8B91FC',
+    borderTopLeftRadius: 20, // Radio de esquina inferior izquierda
+    borderTopRightRadius: 20, // Radio de esquina inferior derecha
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  footerContent: {
     textAlign: 'center', 
-    fontSize: normalize(14),
+    fontSize: 20,
     color: '#333',
-    marginBottom: normalize(20),
   },
 });

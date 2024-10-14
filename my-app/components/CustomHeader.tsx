@@ -5,7 +5,7 @@ interface CustomHeaderProps {
     title: string;
   }
 
-    const { width } = Dimensions.get('window');
+    const { width, height } = Dimensions.get('window');
     const scale = width / 375;
 
     function normalize(size: number) {
@@ -25,16 +25,22 @@ interface CustomHeaderProps {
 const styles = StyleSheet.create({
     header: {
         backgroundColor: '#656CEE', // Color de fondo del encabezado
-        paddingVertical: normalize(20),
         alignItems: 'center',
+        paddingVertical:'5%',
         width: '100%', // Asegúrate de que se extienda por todo el ancho
+        height:'10%',
         position: 'absolute', // Coloca el encabezado en la parte superior
         top: 0, // Pegado al borde superior
         zIndex: 0, // Asegúrate de que esté en la parte superior
-        borderBottomWidth: normalize(5),
-        borderBottomColor: '#656CEE33', // Color del borde inferior
-        borderBottomLeftRadius: normalize(20),
-        borderBottomRightRadius: normalize(20)
+        borderColor:'#656CEE',
+        borderWidth:0.3,
+        shadowColor: '#8B91FC',
+        borderBottomLeftRadius: 20, // Radio de esquina inferior izquierda
+        borderBottomRightRadius: 20, // Radio de esquina inferior derecha
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
       },
       headerTitle: {
         color: '#fff',
