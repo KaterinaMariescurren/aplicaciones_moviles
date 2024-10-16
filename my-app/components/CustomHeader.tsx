@@ -6,11 +6,6 @@ interface CustomHeaderProps {
   }
 
     const { width, height } = Dimensions.get('window');
-    const scale = width / 375;
-
-    function normalize(size: number) {
-    return Math.round(PixelRatio.roundToNearestPixel(size * scale));
-    }
   
   const CustomHeader: React.FC<CustomHeaderProps> = ({
     title,
@@ -28,7 +23,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical:'5%',
         width: '100%', // Asegúrate de que se extienda por todo el ancho
-        height:'10%',
+        height: height*0.10,
         position: 'absolute', // Coloca el encabezado en la parte superior
         top: 0, // Pegado al borde superior
         zIndex: 0, // Asegúrate de que esté en la parte superior
@@ -44,7 +39,7 @@ const styles = StyleSheet.create({
       },
       headerTitle: {
         color: '#fff',
-        fontSize: normalize(24),
+        fontSize: 22.83,
         fontWeight: 'bold',
       },
 });

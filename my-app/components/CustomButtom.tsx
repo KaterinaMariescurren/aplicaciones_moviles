@@ -4,15 +4,17 @@ import { TouchableOpacity, Text, StyleSheet, PixelRatio, Dimensions, ViewStyle }
 
 interface CustomButtonProps {
   title: string;
+  onPress: () => void; // Agregar la prop onPress
   style?: ViewStyle;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
   title,
+  onPress, // Obtener la prop onPress
   style
 }) => {
   return (
-    <TouchableOpacity  onPress={() => alert('Botón en tarjeta presionado!')}>
+    <TouchableOpacity  onPress={onPress}>
         <LinearGradient
             colors={['#FFA500', '#FF4500']} // Colores del gradiente
             start={{ x: 0, y: 0 }}

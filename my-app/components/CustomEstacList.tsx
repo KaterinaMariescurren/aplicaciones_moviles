@@ -1,5 +1,7 @@
-import { FlatList, View, StyleSheet, Text, Image} from "react-native";
+import { FlatList, View, StyleSheet, Text, Image, Dimensions} from "react-native";
 import CustomButton from "./CustomButtom";
+
+const { width, height } = Dimensions.get('window');
 
 export default function CustomList() {
   return (
@@ -29,7 +31,7 @@ export default function CustomList() {
 
 const styles = StyleSheet.create({
     listContainer: {
-      height: '13.5%',
+      height: height*0.13,
       width:'100%',
       paddingLeft:17,
       marginBottom:26,
