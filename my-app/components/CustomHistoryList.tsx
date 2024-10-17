@@ -34,6 +34,7 @@ export default function CustomList() {
             </View>
           </View>
         )}
+        scrollEnabled={false}
         ItemSeparatorComponent={() => <View style={{ paddingBottom:15}} />}
         style={{flex:1}}
         showsVerticalScrollIndicator={false}

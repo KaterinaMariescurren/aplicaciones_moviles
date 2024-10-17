@@ -6,10 +6,13 @@ import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
 import CustomDespegable from '@/components/CustomDespegable';
 import CustomEstacList from '@/components/CustomEstacList';
+import { useRouter } from 'expo-router';
 
 const { height } = Dimensions.get('window');
 
-const Home: React.FC<{ navigation: any }> = ({ navigation }) => {
+export default function Index() {
+
+    const router = useRouter();
     const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
     const [isChecked, setIsChecked] = useState(false);
 
@@ -43,12 +46,16 @@ const Home: React.FC<{ navigation: any }> = ({ navigation }) => {
     const formattedDate: string = formatDate(currentDate);
     const formattedTime: string = formatTime(currentDate);
 
+    const handlePress = () => {
+        router.push('/zonas'); // Redirige a la pantalla indicada
+      };
+    
+
     return (
     <View style={styles.container}>
         <ScrollView>
-        <CustomHeader title='inicio'></CustomHeader>
             <View style={styles.imageContainer}>
-                <Image source={require('../../assets/images/imagen-inicio.png')} resizeMode="contain" style={styles.image} />
+                <Image source={require('../assets/images/imagen-inicio.png')} resizeMode="contain" style={styles.image} />
             </View>
             {/* Tarjeta */}
             <View style={styles.card}>
@@ -59,10 +66,10 @@ const Home: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <CustomButton title='Sí' onPress={openBottomEstacionar} style={{ width: '100%' }} />
             </View>
             <CustomCarList />
-            <CustomEstacList navigation={navigation} />
+            <CustomEstacList/>
             <View style={styles.card}>
                 <Text style={styles.cardContent}>¿Quieres ver la zona de estacionamiento medido y puntos de carga?</Text>
-                <CustomButton title='Sí' onPress={() => alert('Botón "Sí" presionado!')} style={{ width: '100%' }} />
+                <CustomButton title='Sí' onPress={handlePress} style={{ width: '100%' }} />
             </View>
             <View style={styles.cardHistory}>
                 <CustomHistoryList />
@@ -73,18 +80,18 @@ const Home: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <Text style={styles.listText}>Día y Horario:</Text>
                 <View style={styles.containerDia_Horario}>
                     <View style={styles.itemDia}>
-                    <Image source={require('../../assets/images/calendario.png')} resizeMode="contain" style={styles.calendario} />
+                    <Image source={require('../assets/images/calendario.png')} resizeMode="contain" style={styles.calendario} />
                     <Text style={styles.textDia_Horario}>{formattedDate}</Text>
                     </View>
                     <View style={styles.itemHorario}>
-                    <Image source={require('../../assets/images/clock-outline.png')} resizeMode="contain" style={styles.calendario} />
+                    <Image source={require('../assets/images/clock-outline.png')} resizeMode="contain" style={styles.calendario} />
                     <Text style={styles.textDia_Horario}>{formattedTime}</Text>
                     </View>
                 </View>
                 <Text style={styles.listText}>Dirección:</Text>
                 <View style={styles.containerDia_Horario}>
                     <View style={styles.itemDia}>
-                    <Image source={require('../../assets/images/map-pointer.png')} resizeMode="contain" style={styles.calendario} />
+                    <Image source={require('../assets/images/map-pointer.png')} resizeMode="contain" style={styles.calendario} />
                     <Text style={styles.textDia_Horario}>15 y 155</Text>
                     </View>
                 </View>
@@ -108,13 +115,13 @@ const styles = StyleSheet.create({
     flex: 1, // Hace que el contenedor ocupe toda la pantalla
     },
     imageContainer: {
-    width: '60%',
+    width: '70%',
     height: 200, // Altura fija para asegurar que ocupe espacio en la pantalla
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
     overflow: 'hidden',
-    marginTop: height * 0.07,
+    marginTop: height*0.01,
     },
     image: {
     width: '100%',
@@ -253,5 +260,3 @@ const styles = StyleSheet.create({
     color: '#203D65', // Color del texto
     },
 });
-
-export default Home;

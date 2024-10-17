@@ -1,14 +1,17 @@
 import { FlatList, View, StyleSheet, Text, Image, Dimensions} from "react-native";
 import CustomButton from "./CustomButtom";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { Link, useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get('window');
 
-interface CustomEstacListProps {
-  navigation: any; // o el tipo correspondiente
-}
 
-const CustomEstacList: React.FC<CustomEstacListProps> = ({ navigation }) => {
+export default function CustomEstacList() {
+
+  const router = useRouter();
+
+  const handlePress = () => {
+    router.push('/ubicacion'); // Redirige a la pantalla indicada
+  };
 
   return (
     <View style={styles.listContainer}>
@@ -27,8 +30,8 @@ const CustomEstacList: React.FC<CustomEstacListProps> = ({ navigation }) => {
             </View>
             <CustomButton 
               title="Ver" 
-              style={{ width: '75%', alignSelf: 'center' }} 
-              onPress={() => navigation.navigate('Map')} 
+              style={{ width: '75%', alignSelf: 'center' }}
+              onPress={handlePress}
             />
           </View>
         )}
@@ -108,5 +111,3 @@ export const cars = [
     { id: '3', name: 'Audi A4', patente:'2187' },
     { id: '4', name: 'Toyota Corolla', patente:'9837' },
   ];
-
-  export default CustomEstacList;
