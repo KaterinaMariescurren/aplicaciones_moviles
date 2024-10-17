@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
 import CustomButton from '@/components/CustomButtom';
-import CustomHeader from '@/components/CustomHeader';
 import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
 import CustomDespegable from '@/components/CustomDespegable';
@@ -10,7 +9,7 @@ import { useRouter } from 'expo-router';
 
 const { height } = Dimensions.get('window');
 
-export default function Index() {
+const InicioScreen = () => {
 
     const router = useRouter();
     const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -260,3 +259,5 @@ const styles = StyleSheet.create({
     color: '#203D65', // Color del texto
     },
 });
+
+export default InicioScreen;

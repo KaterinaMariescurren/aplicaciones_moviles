@@ -17,9 +17,10 @@ export default function RootLayout() {
       },
     }}>
       <Stack.Screen 
-      name="inicio"
+      name="index"
       options={{
-        headerTitle:"Inicio"
+        headerTitle:"Inicio",
+        headerBackVisible:false,
       }} />
       <Stack.Screen 
       name="ubicacion"
