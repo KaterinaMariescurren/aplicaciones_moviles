@@ -122,13 +122,13 @@ const styles = StyleSheet.create({
     listContainer: {
       height: height * 0.13,
       width: '100%',
-      paddingLeft: 17,
+      paddingHorizontal: 17,
       marginBottom: 26,
-      alignSelf: 'flex-start',
     },
     listText: {
-      fontSize: 25.62,
+      fontSize: 20,
       fontWeight: 'bold',
+      color:'#203D65'
     },
     item: {
       width: 190,
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       alignItems: 'center',
       marginLeft: 12,
-      marginVertical: 2,
+      marginVertical: 6,
     },
     auto: {
       width: 20,

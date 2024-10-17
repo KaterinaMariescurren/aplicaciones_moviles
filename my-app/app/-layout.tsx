@@ -12,8 +12,8 @@ export default function RootLayout() {
           fontWeight: 'bold',
         },
       }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="map" />
+      <Stack.Screen name="(home)" />
+      <Stack.Screen name="(map)" />
     </Stack>
   );
 }
