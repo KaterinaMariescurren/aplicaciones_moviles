@@ -12,6 +12,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
+    "env.d.ts",            // Include this if in the root
+    "@types/**/*.d.ts",   // Include all definitions from the @types directory, if used
     "expo-env.d.ts"
   ]
 }

@@ -45,9 +45,9 @@ const InicioScreen = () => {
     const formattedDate: string = formatDate(currentDate);
     const formattedTime: string = formatTime(currentDate);
 
-    const handlePress = () => {
-        router.push('/zonas'); // Redirige a la pantalla indicada
-      };
+// const handlePress = () => {
+//     router.push('/zonas'); // Redirige a la pantalla indicada
+//   };
     
 
     return (
@@ -68,7 +68,7 @@ const InicioScreen = () => {
             <CustomEstacList/>
             <View style={styles.card}>
                 <Text style={styles.cardContent}>¿Quieres ver la zona de estacionamiento medido y puntos de carga?</Text>
-                <CustomButton title='Sí' onPress={handlePress} style={{ width: '100%' }} />
+{/* <CustomButton title='Sí' onPress={handlePress} style={{ width: '100%' }} /> */}
             </View>
             <View style={styles.cardHistory}>
                 <CustomHistoryList />
