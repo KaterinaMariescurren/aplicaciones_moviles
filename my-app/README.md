@@ -53,5 +53,6 @@ Join our community of developers creating universal apps.
 -  npm install -g expo-cli
 -  expo install expo-location 
 - npm install react-native-maps-directions
+- npx expo install expo-sqlite
 - npm install react-native-dotenv
 - expo install @react-native-community/geolocation

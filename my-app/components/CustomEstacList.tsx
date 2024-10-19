@@ -1,11 +1,32 @@
 import { FlatList, View, StyleSheet, Text, Image, Dimensions} from "react-native";
 import CustomButton from "./CustomButtom";
 import { Link, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { AutoDataBase, useDatabase } from "@/app/database/useDatabase";
 
 const { width, height } = Dimensions.get('window');
 
 
 export default function CustomEstacList() {
+  
+  const [autos, setAutos ] = useState<AutoDataBase[]>([])
+
+  const database = useDatabase()
+
+  async function listAuto() {
+    try {
+      const response = await (await database).listAuto();
+      if (response) {
+        setAutos(response);  // Asegúrate de que `response` sea un array antes de pasarlo a `setAutos`
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    listAuto();  // Cargar los autos cuando el componente se monte
+  }, []);
 
   const router = useRouter();
 
@@ -19,14 +40,14 @@ export default function CustomEstacList() {
         <Text style={styles.listText}>Estacionamientos Activos:</Text>
       </View>
       <FlatList
-        data={cars}
+        data={autos}
         horizontal
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <View style={styles.item}>
             <View style={styles.view_auto}>
               <Image source={require('../assets/images/auto.png')} resizeMode="contain" style={styles.auto} />
-              <Text style={styles.textName}>{item.name}</Text>
+              <Text style={styles.textName}>{item.marca} {item.modelo}</Text>
             </View>
             <CustomButton 
               title="Ver" 
@@ -102,12 +123,3 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
 });
-
-
-// data.ts
-export const cars = [
-    { id: '1', name: 'Mercedes G 63', patente:'1234' },
-    { id: '2', name: 'BMW 325i', patente:'4567'},
-    { id: '3', name: 'Audi A4', patente:'2187' },
-    { id: '4', name: 'Toyota Corolla', patente:'9837' },
-  ];
