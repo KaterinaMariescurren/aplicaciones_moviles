@@ -48,3 +48,10 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Comandos extras
+-  npm install -g expo-cli
+-  expo install expo-location 
+- npm install react-native-maps-directions
+- npm install react-native-dotenv
+- expo install @react-native-community/geolocation
