@@ -78,7 +78,7 @@ export default function CustomList() {
       <View style={styles.view_plus_circle}>
         <Text style={styles.listText}>Mis Autos:</Text>
         <TouchableOpacity onPress={openBottomSheet} style={{marginLeft: 'auto'}}>
-          <Image source={require('../assets/images/plus-circle.png')} resizeMode="contain" style={styles.plus_circle}></Image>
+          <Image source={require('../assets/images/icon/icon-plus.png')} resizeMode="contain" style={styles.plus_circle} tintColor="#FF4500"></Image>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
       marginVertical: 2,
     },
     plus_circle: {
-      width: 27,
+      width: 22,
       height: 26,
       marginRight: 9,
     },

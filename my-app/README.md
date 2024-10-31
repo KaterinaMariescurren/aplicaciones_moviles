@@ -50,9 +50,10 @@ Join our community of developers creating universal apps.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
 ## Comandos extras
--  npm install -g expo-cli
--  expo install expo-location 
+- npm install -g expo-cli
+- expo install expo-location 
 - npm install react-native-maps-directions
 - npx expo install expo-sqlite
 - npm install react-native-dotenv
 - expo install @react-native-community/geolocation
+- npx expo install react-native-maps
