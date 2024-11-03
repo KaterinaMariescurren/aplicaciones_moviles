@@ -57,3 +57,4 @@ Join our community of developers creating universal apps.
 - npm install react-native-dotenv
 - expo install @react-native-community/geolocation
 - npx expo install react-native-maps
+- expo install react-native-vector-icons

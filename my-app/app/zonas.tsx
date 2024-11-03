@@ -48,7 +48,7 @@ export default function Zonas() {
             provider={Platform.OS === 'android' ? 'google' : undefined}
             showsUserLocation={hasLocationPermission} //Ubicacion del Usuario
             ref={mapRef} >
-                {/* Marcar puntos de carga haciendo un archivo ts en assets llamado markers*/}
+                {/* Marcar puntos de carga*/}
                 {markers.map((marker, index) => (
                     <Marker key={index} coordinate={marker}>
                         <Image source={require('../assets/images/icon/noun-store-location-1362338.png')} style={{ width: 30, height: 50, tintColor: '#FF4500' }} />
