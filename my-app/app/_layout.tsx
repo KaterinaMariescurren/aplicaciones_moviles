@@ -31,7 +31,7 @@ export default function RootLayout() {
       <Stack.Screen 
       name="zonas"
       options={{
-        headerTitle:"Zonas y Puntos de Carga"
+        headerTitle:"CityBell"
       }} />
     </Stack>
   );

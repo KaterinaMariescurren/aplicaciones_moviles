@@ -1,45 +1,47 @@
 // app/(map)/index.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import MapView, { Callout, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import { View, Text, StyleSheet, Platform, TouchableOpacity, Image} from 'react-native';
-import { useNavigation } from 'expo-router';
+import MapView, { Callout, Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps';
+import { View, Text, StyleSheet, Platform, TouchableOpacity, Image, Alert} from 'react-native';
 import * as Location from 'expo-location';
 import { markers } from '@/assets/markers';
+import polygonsData from '../assets/poligono.json';
 
 export default function Zonas() {
     const mapRef = useRef <MapView>();
-    const navigation = useNavigation();
     const [hasLocationPermission, setHasLocationPermission] = useState(false);
+    const [showPolygons, setShowPolygons] = useState(true);
+    const [showMarker, setShowMarker] = useState(false);
 
     useEffect(() => {
-        navigation.setOptions({
-            headerRight:() => (
-                <TouchableOpacity onPress={focusMap}>
-                    <View style={{ padding: 10}}>
-                        <Text>Zona</Text>
-                    </View>
-                </TouchableOpacity>
-            ),
-        });
-
+            
         (async () => {
             const { status } = await Location.requestForegroundPermissionsAsync();
             setHasLocationPermission(status === 'granted');
+    
+            if (status === 'granted') {
+                const userLocation = await Location.getCurrentPositionAsync({});
+                const region = {
+                    latitude:-34.871028, 
+                    longitude:-58.045958,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                };
+                mapRef.current?.animateToRegion(region, 1000);
+            }
         })();
     }, []);
 
-    //Marcar una zona en esepecifico
-    const focusMap = () => {
-        const CityBell = {
-            latitude:-34.866137, 
-            longitude:-58.046823,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-        };
-
-        mapRef.current?.animateToRegion(CityBell);
+    // Convertir coordenadas de GeoJSON a formato compatible con Polygon
+    const convertCoordinates = (coordinates: number[][][]) => {
+        return coordinates[0].map(([longitude, latitude]) => ({
+            latitude,
+            longitude,
+        }));
     };
 
+    const handlePolygonPress = (index: number) => {
+        Alert.alert("En Horario", 'Precio por hora: $100');
+    };
 
     return(
         <View style={{ flex: 1 }}>
@@ -48,19 +50,44 @@ export default function Zonas() {
             provider={Platform.OS === 'android' ? 'google' : undefined}
             showsUserLocation={hasLocationPermission} //Ubicacion del Usuario
             ref={mapRef} >
-                {/* Marcar puntos de carga*/}
-                {markers.map((marker, index) => (
-                    <Marker key={index} coordinate={marker}>
+
+                {/* Renderizar el marcador solo si showMarker es verdadero  */}
+                {showMarker && markers.map((marker, index) => (
+                    <Marker key={index} coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}>
                         <Image source={require('../assets/images/icon/noun-store-location-1362338.png')} style={{ width: 30, height: 50, tintColor: '#FF4500' }} />
                         <Callout>
-                            <View style={{ padding : 10 }}>
-                                <Text style={{ fontSize : 24 }}>{marker.name}</Text>
+                            <View style={styles.calloutContainer}>
+                                <Text style={styles.calloutText}>{marker.name}</Text>
                             </View>
                         </Callout>
                     </Marker>
-                ))} 
+                ))}
 
+                {/* Renderizar polígonos solo si `showPolygons` es verdadero */}
+                {showPolygons && polygonsData.features.map((feature, index) => (
+                    <Polygon
+                        key={index} 
+                        coordinates={convertCoordinates(feature.geometry.coordinates)}
+                        strokeColor="#FF4500" 
+                        fillColor="rgba(255, 69, 0, 0.3)" 
+                        strokeWidth={1} 
+                        tappable 
+                        onPress={() => handlePolygonPress(index)} 
+                    />
+                ))}
             </MapView>
+
+            {/* Botones para alternar visibilidad de polígonos y marcador */}
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.button} onPress={() => setShowPolygons(!showPolygons)}>
+                    <Text style={styles.buttonText}>{showPolygons ? "Ocultar Zona de estacionamiento" : "Mostrar Zona de estacionamiento"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => setShowMarker(!showMarker)}>
+                    <Text style={styles.buttonText}>{showMarker ? "Ocultar Punto de carga" : "Mostrar Punto de carga"}</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Mensaje de permiso si la ubicación no está permitida */}
             {!hasLocationPermission && (
                 <View style={styles.permissionContainer}>
                     <Text style={styles.permissionText}>Se necesita permiso para acceder a la ubicación.</Text>
@@ -85,5 +112,43 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         margin: 20,
     },
+    buttonContainer: {
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        right: 20,
+        flexDirection: 'column', 
+        justifyContent: 'space-between', 
+        gap: 10, 
+    },
+    button: {
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        backgroundColor: '#656CEE',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    buttonText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+        fontSize: 16,
+        textAlign: 'center',
+        letterSpacing: 1,
+    },   
+    calloutContainer: {
+        width: 150, 
+        padding: 10,
+        backgroundColor: 'white',
+        borderRadius: 5,
+        elevation: 2, 
+    },
+    calloutText: {
+        fontSize: 18,
+        textAlign: 'center', 
+    }, 
 });
 
