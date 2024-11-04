@@ -2,32 +2,15 @@ import { FlatList, View, StyleSheet, Text, Image, Dimensions} from "react-native
 import CustomButton from "./CustomButtom";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { AutoDataBase, useDatabase } from "@/app/database/useDatabase";
+import { AutoDataBase, EstacionamientoDataBase, useDatabase } from "@/app/database/useDatabase";
 
 const { width, height } = Dimensions.get('window');
 
+interface CustomEstacListProps {
+  estacionamientos: EstacionamientoDataBase[]; // Tipar correctamente la propiedad
+}
 
-export default function CustomEstacList() {
-  
-  const [autos, setAutos ] = useState<AutoDataBase[]>([])
-
-  const database = useDatabase()
-
-  async function listAuto() {
-    try {
-      const response = await (await database).listAuto();
-      if (response) {
-        setAutos(response);  // Asegúrate de que `response` sea un array antes de pasarlo a `setAutos`
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  useEffect(() => {
-    listAuto();  // Cargar los autos cuando el componente se monte
-  }, []);
-
+export default function CustomEstacList({ estacionamientos }: CustomEstacListProps) {
   const router = useRouter();
 
   const handlePress = () => {
@@ -40,7 +23,7 @@ export default function CustomEstacList() {
         <Text style={styles.listText}>Estacionamientos Activos:</Text>
       </View>
       <FlatList
-        data={autos}
+        data={estacionamientos}
         horizontal
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (

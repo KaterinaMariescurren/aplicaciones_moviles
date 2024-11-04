@@ -1,34 +1,62 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import CustomButton from '@/components/CustomButtom';
 import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
 import CustomDespegable from '@/components/CustomDespegable';
 import CustomEstacList from '@/components/CustomEstacList';
 import { useRouter } from 'expo-router';
-import { AutoDataBase, useDatabase } from './database/useDatabase';
+import { AutoDataBase, EstacionamientoDataBase, useDatabase } from './database/useDatabase';
+import * as FileSystem from 'expo-file-system';
+
 
 
 const { height } = Dimensions.get('window');
 
 const InicioScreen = () => {
-
-    const [marca, setMarca] = useState("")
-    const [modelo, setModelo] = useState("")
-    const [patente, setPatente ] = useState("")
-    const [autos, setAutos ] = useState<AutoDataBase[]>([])
-
+    const router = useRouter();
     const database = useDatabase()
 
-    async function createAuto(){
-        try{
-        (await database).createAuto({marca,modelo,patente})
+    // Estado para manejar la ubicación y otras variables
+    const [ubicacion, setUbicacion] = useState("");
+    const [notificar, setNotificar] = useState(0);
+    const [selectedAutoId, setSelectedAutoId] = useState<number | null>(null); // ID del auto seleccionado
+    const [autos, setAutos ] = useState<AutoDataBase[]>([])
+    const [estacionamientos, setEstacionamientos] = useState<EstacionamientoDataBase[]>([]); // Estacionamientos activos
 
-            listAuto()
-        }catch(error){
-            console.log(error)
-        }
-    }
+    const fecha = new Date();
+
+    // Formatear fecha y hora para su uso
+    const formattedDate: string = `${fecha.getDate()} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][fecha.getMonth()]}`;
+    const formattedTime: string = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')} hs`;
+
+    const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
+    const [isChecked, setIsChecked] = useState(false);
+
+    // Función para abrir el despegable de estacionamiento
+    const openBottomEstacionar = () => {
+        setBottomSheetVisible(true);
+        setSelectedAutoId(null); // Restablecer auto seleccionado
+        setUbicacion(""); // Restablecer ubicación
+    };
+
+    // Función para cerrar el despegable
+    const closeBottomEstacionar = () => setBottomSheetVisible(false);
+
+    // Función para manejar la selección de un auto
+    const handleSelectAuto = (id: number) => {
+        setSelectedAutoId(id);
+    };
+
+    // Función para manejar el cambio del checkbox de notificación
+    const handleCheckboxChange = () => {
+        setIsChecked(true);
+        setNotificar(notificar === 0 ? 1 : 0);
+    };
+
+    const handlePress = () => {
+        router.push('/zonas'); // Redirige a la pantalla indicada
+    };
 
     async function listAuto() {
         try {
@@ -41,49 +69,74 @@ const InicioScreen = () => {
         }
     }
 
+    async function listEstacionamientosActivos() {
+        try{
+            const response = await (await database).listEstacionamientosActivos();
+            if (response) {
+                setEstacionamientos(response);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // Función para crear un nuevo estacionamiento
+    async function createEstacionamiento() {
+        try {
+            if (selectedAutoId === null) {
+                Alert.alert('Error', 'Selecciona un auto primero.');
+                return;
+            }
+            if (ubicacion === "") {
+                Alert.alert('Error', 'Ingresa la ubicación del auto.');
+                return;
+            }
+            console.log('Creando Estacionamiento');
+            const newEstacionamiento: EstacionamientoDataBase ={
+                id: 0,
+                fecha,
+                horario: formattedTime,
+                ubicacion,
+                activo: 1,
+                notificar,
+                auto_id: selectedAutoId
+            };
+            // Crear estacionamiento en la base de datos
+            const response = await (await database).createEstacionamiento(newEstacionamiento);
+            addEstacionamiento(newEstacionamiento);
+            closeBottomEstacionar();
+        } catch (error) {
+            console.log(error);
+            Alert.alert('Error', 'No se pudo crear el estacionamiento.');
+        }
+    };
+
+    async function eliminarBaseDeDatos() {
+        const databaseFilePath = `${FileSystem.documentDirectory}SQLite/medidoCityBell.db`; // Ajusta el nombre a tu base de datos
+    
+        try {
+            await FileSystem.deleteAsync(databaseFilePath);
+            console.log("Base de datos eliminada correctamente");
+        } catch (error) {
+            console.error("Error al eliminar la base de datos:", error);
+        }
+    }
+
     useEffect(() => {
-        listAuto();  // Cargar los autos cuando el componente se monte
+        console.log('Autos:');
+        listAuto();
+        console.log('Estacionamientos:');
+        listEstacionamientosActivos();
     }, []);
 
-    const router = useRouter();
-    const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
-    const [isChecked, setIsChecked] = useState(false);
-
-    const openBottomEstacionar = () => setBottomSheetVisible(true);
-    const closeBottomEstacionar = () => setBottomSheetVisible(false);
-
-    const handleCheckboxChange = () => {
-    setIsChecked(!isChecked);
+    const addAuto = (newAuto: AutoDataBase) => {
+        setAutos((prevAutos) => [...prevAutos, newAuto]);
     };
 
-    const currentDate = new Date();
-
-    const formatDate = (date: Date): string => {
-    const day = date.getDate();
-    const monthNames: string[] = [
-        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-    ];
-    const month = monthNames[date.getMonth()];
-    return `${day} de ${month}`;
-    };
-
-    const formatTime = (date: Date): string => {
-    const hours: number = date.getHours();
-    const minutes: number = date.getMinutes();
-    const formattedHours: string = String(hours).padStart(2, '0');
-    const formattedMinutes: string = String(minutes).padStart(2, '0');
-    return `${formattedHours}:${formattedMinutes} hs`;
-    };
-
-    const formattedDate: string = formatDate(currentDate);
-    const formattedTime: string = formatTime(currentDate);
-
-    const handlePress = () => {
-        router.push('/zonas'); // Redirige a la pantalla indicada
+    const addEstacionamiento = (newEstacionamiento: EstacionamientoDataBase) => {
+        setEstacionamientos((prevEstacionamiento) => [...prevEstacionamiento, newEstacionamiento]);
     };
     
-
     return (
     <View style={styles.container}>
         <ScrollView>
@@ -98,8 +151,8 @@ const InicioScreen = () => {
                 </Text>
                 <CustomButton title='Sí' onPress={openBottomEstacionar} style={{ width: '100%' }} />
             </View>
-            <CustomCarList />
-            <CustomEstacList/>
+            <CustomCarList autos={autos} addAuto={addAuto} mode='popup' onSelectAuto={handleSelectAuto}/>
+            <CustomEstacList estacionamientos={estacionamientos}/>
             <View style={styles.card}>
                 <Text style={styles.cardContent}>¿Quieres ver la zona de estacionamiento medido y puntos de carga?</Text>
             <CustomButton title='Sí' onPress={handlePress} style={{ width: '100%' }} /> 
@@ -108,7 +161,7 @@ const InicioScreen = () => {
                 <CustomHistoryList />
             </View>
             <CustomDespegable visible={isBottomSheetVisible} onClose={closeBottomEstacionar} title="Estacionamiento Medido" heightPercentage={0.75}>
-                <CustomCarList />
+                <CustomCarList autos={autos} addAuto={addAuto} mode='selection' onSelectAuto={handleSelectAuto}/>
                 <View style={styles.containerDespegable}>
                 <Text style={styles.listText}>Día y Horario:</Text>
                 <View style={styles.containerDia_Horario}>
@@ -121,20 +174,25 @@ const InicioScreen = () => {
                     <Text style={styles.textDia_Horario}>{formattedTime}</Text>
                     </View>
                 </View>
+                {/* Campo para ingresar dirección */}
                 <Text style={styles.listText}>Dirección:</Text>
-                <View style={styles.containerDia_Horario}>
-                    <View style={styles.itemDia}>
-                    <Image source={require('../assets/images/map-pointer.png')} resizeMode="contain" style={styles.calendario} />
-                    <Text style={styles.textDia_Horario}>15 y 155</Text>
-                    </View>
-                </View>
+                        <View style={styles.containerDia_Horario}>
+                            <View style={styles.itemDia}>
+                                <TextInput
+                                    style={styles.textDia_Horario}
+                                    placeholder="Ingresa la ubicación"
+                                    value={ubicacion}
+                                    onChangeText={setUbicacion}
+                                />
+                            </View>
+                        </View>
                 <View style={styles.containerBox}>
                     <TouchableOpacity style={styles.checkboxContainer} onPress={handleCheckboxChange}>
                     <View style={[styles.checkbox, isChecked && styles.checked]} />
                     <Text style={styles.label}>Notificarme cada 1 hs</Text>
                     </TouchableOpacity>
                 </View>
-                <CustomButton title='Empezar' onPress={openBottomEstacionar} style={{ paddingVertical: 10 }} />
+                <CustomButton title='Empezar' onPress={createEstacionamiento} style={{ paddingVertical: 10 }} />
                 </View>
             </CustomDespegable>
         </ScrollView>
