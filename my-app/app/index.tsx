@@ -102,8 +102,10 @@ const InicioScreen = () => {
                 auto_id: selectedAutoId
             };
             // Crear estacionamiento en la base de datos
-            const response = await (await database).createEstacionamiento(newEstacionamiento);
-            addEstacionamiento(newEstacionamiento);
+            await (await database).createEstacionamiento(newEstacionamiento);
+            // Actualizar la lista de estacionamientos activos
+            const updatedEstacionamientos = await(await database).listEstacionamientosActivos();
+            setEstacionamientos(updatedEstacionamientos);
             closeBottomEstacionar();
         } catch (error) {
             console.log(error);
@@ -131,10 +133,6 @@ const InicioScreen = () => {
 
     const addAuto = (newAuto: AutoDataBase) => {
         setAutos((prevAutos) => [...prevAutos, newAuto]);
-    };
-
-    const addEstacionamiento = (newEstacionamiento: EstacionamientoDataBase) => {
-        setEstacionamientos((prevEstacionamiento) => [...prevEstacionamiento, newEstacionamiento]);
     };
     
     return (
