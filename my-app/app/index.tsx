@@ -1,15 +1,49 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import CustomButton from '@/components/CustomButtom';
 import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
 import CustomDespegable from '@/components/CustomDespegable';
 import CustomEstacList from '@/components/CustomEstacList';
 import { useRouter } from 'expo-router';
+import { AutoDataBase, useDatabase } from './database/useDatabase';
+
 
 const { height } = Dimensions.get('window');
 
 const InicioScreen = () => {
+
+    const [marca, setMarca] = useState("")
+    const [modelo, setModelo] = useState("")
+    const [patente, setPatente ] = useState("")
+    const [autos, setAutos ] = useState<AutoDataBase[]>([])
+
+    const database = useDatabase()
+
+    async function createAuto(){
+        try{
+        (await database).createAuto({marca,modelo,patente})
+
+            listAuto()
+        }catch(error){
+            console.log(error)
+        }
+    }
+
+    async function listAuto() {
+        try {
+        const response = await (await database).listAuto();
+        if (response) {
+            setAutos(response);
+        }
+        } catch (error) {
+        console.log(error);
+        }
+    }
+
+    useEffect(() => {
+        listAuto();  // Cargar los autos cuando el componente se monte
+    }, []);
 
     const router = useRouter();
     const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -45,9 +79,9 @@ const InicioScreen = () => {
     const formattedDate: string = formatDate(currentDate);
     const formattedTime: string = formatTime(currentDate);
 
-// const handlePress = () => {
-//     router.push('/zonas'); // Redirige a la pantalla indicada
-//   };
+    const handlePress = () => {
+        router.push('/zonas'); // Redirige a la pantalla indicada
+    };
     
 
     return (
@@ -68,7 +102,7 @@ const InicioScreen = () => {
             <CustomEstacList/>
             <View style={styles.card}>
                 <Text style={styles.cardContent}>¿Quieres ver la zona de estacionamiento medido y puntos de carga?</Text>
-{/* <CustomButton title='Sí' onPress={handlePress} style={{ width: '100%' }} /> */}
+            <CustomButton title='Sí' onPress={handlePress} style={{ width: '100%' }} /> 
             </View>
             <View style={styles.cardHistory}>
                 <CustomHistoryList />

@@ -34,11 +34,11 @@ export default function CustomList() {
             </View>
           </View>
         )}
-        scrollEnabled={false}
         ItemSeparatorComponent={() => <View style={{ paddingBottom:15}} />}
         style={{flex:1}}
         showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true}
+        scrollEnabled={false}  // Desactiva el desplazamiento dentro del FlatList
+        nestedScrollEnabled={true} // Permite desplazamiento anidado
       />
     </View>
   );

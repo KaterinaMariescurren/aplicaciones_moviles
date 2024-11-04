@@ -1,26 +1,65 @@
-import { FlatList, View, StyleSheet, Text, Image, Dimensions, TouchableOpacity, Modal, TextInput} from "react-native";
-import React, { useState } from 'react';
+import { FlatList, View, StyleSheet, Text, Image, Dimensions, TouchableOpacity, Modal, TextInput, Alert} from "react-native";
+import React, { useEffect, useState } from 'react';
 import CustomDespegable from "./CustomDespegable";
 import DropDownPicker from "react-native-dropdown-picker";
 import CustomButton from "./CustomButtom";
+import { AutoDataBase, useDatabase } from "@/app/database/useDatabase";
+import CustomDespegableDelete from "./CustomDespegableDelete";
 
 const { width, height } = Dimensions.get('window');
 
 export default function CustomList() {
+
+  const [marca, setMarca] = useState("")
+  const [modelo, setModelo] = useState("")
+  const [patente, setPatente ] = useState("")
+  const [autos, setAutos ] = useState<AutoDataBase[]>([])
+
+  const database = useDatabase()
+
+  async function createAuto(){
+    try{
+        (await database).createAuto({marca,modelo,patente})
+
+        listAuto()
+    }catch(error){
+        console.log(error)
+    }
+  }
+
+  async function listAuto() {
+    try {
+      const response = await (await database).listAuto();
+      if (response) {
+        setAutos(response);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    listAuto();  // Cargar los autos cuando el componente se monte
+  }, []);
+
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
+  const [isBottomDeleteVisible, setBottomDeleteVisible] = useState(false);
+  const [selectedAuto, setSelectedAuto] = useState<AutoDataBase | null>(null);
+  const [despegableTitle, setDespegableTitle] = useState("");
 
   const openBottomSheet = () => setBottomSheetVisible(true);
   const closeBottomSheet = () => setBottomSheetVisible(false);
 
-  const cars = [
-    { id: '1', name: 'Mercedes G 63', patente:'1234' },
-    { id: '2', name: 'BMW 325i', patente:'4567'},
-    { id: '3', name: 'Audi A4', patente:'2187' },
-    { id: '4', name: 'Toyota Corolla', patente:'9837' },
-  ];
+  const openBottomDelete = () => setBottomDeleteVisible(true);
+  const closeBottomDelete = () => setBottomDeleteVisible(false);
+
+  const handleItemPress = (item: AutoDataBase) => {
+    setSelectedAuto(item); // Guardar el auto seleccionado
+    setDespegableTitle(`${item.marca} ${item.modelo}`); // Actualizar el título del despegable
+    openBottomDelete(); // Abrir el despegable
+  };
 
   const [openMarca, setOpenMarca] = useState(false);
-  const [marca, setMarca] = useState(null);
   const [marcas] = useState([
     { label: 'Toyota', value: 'toyota' },
     { label: 'Ford', value: 'ford' },
@@ -28,56 +67,37 @@ export default function CustomList() {
   ]);
 
   const [openModelo, setOpenModelo] = useState(false);
-  const [modelo, setModelo] = useState(null);
   const [modelos] = useState([
     { label: 'Corolla', value: 'corolla' },
     { label: 'Mustang', value: 'mustang' },
     { label: 'X5', value: 'x5' },
   ]);
 
-  const [patente, setPatente] = useState('');
-
-  // Cambia el estado del modelo al abrir la marca
-  const handleOpenMarca = () => {
-    setOpenModelo(false); // Cerrar modelo
-    setOpenMarca(true);
-  };
-
-  // Cambia el estado del modelo al abrir la marca
-  const handleOpenModelo = () => {
-    setOpenMarca(false); // Cerrar marca
-    setOpenModelo(true);
-  };
-
-  const handlePressAgregar = () => {
-    alert('Botón "Agregar" presionado!');
-    // Aquí puedes añadir la lógica adicional que necesites
-  };
-
   return (
     <View style={styles.listContainer}>
       <View style={styles.view_plus_circle}>
         <Text style={styles.listText}>Mis Autos:</Text>
         <TouchableOpacity onPress={openBottomSheet} style={{marginLeft: 'auto'}}>
-          <Image source={require('../assets/images/plus-circle.png')} resizeMode="contain" style={styles.plus_circle}></Image>
+          <Image source={require('../assets/images/icon/icon-plus.png')} resizeMode="contain" style={styles.plus_circle} tintColor="#FF4500"></Image>
         </TouchableOpacity>
       </View>
       <FlatList
-        data={cars}
+        data={autos}
         horizontal
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <View style={styles.item}>
+          <TouchableOpacity onPress={() => handleItemPress(item)} style={styles.item}>
             <View style={styles.view_auto}>
               <Image source={require('../assets/images/auto.png')} resizeMode="contain" style={styles.auto}></Image>
-              <Text style={styles.textName}>{item.name}</Text>
+              <Text style={styles.textName}>{item.marca} {item.modelo}</Text>
             </View>
             <Text style={styles.textPatent}>{item.patente}</Text>
-          </View>
+          </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
         showsHorizontalScrollIndicator={false}
       />
+      <CustomDespegableDelete visible={isBottomDeleteVisible} onClose={closeBottomDelete} title={despegableTitle} children={undefined}></CustomDespegableDelete>
       <CustomDespegable visible={isBottomSheetVisible} onClose={closeBottomSheet} title="Auto">
         <View style={styles.container}>
           <DropDownPicker
@@ -91,6 +111,7 @@ export default function CustomList() {
             style={styles.dropdown}
             dropDownContainerStyle={[styles.dropdownContainer, { marginBottom: 15 }]} // Añadir margen
             dropDownDirection="TOP" // Abrir hacia arriba
+
           />
           <DropDownPicker
             open={openModelo}
@@ -111,7 +132,8 @@ export default function CustomList() {
             value={patente}
             onChangeText={setPatente}
           />
-          <CustomButton title="Agregar" onPress={handlePressAgregar} style={{marginVertical:30, height:'35%',}}></CustomButton>
+          <CustomButton title="Agregar" onPress={() => {createAuto();closeBottomSheet();}}  
+          style={{marginVertical:30, height:'35%',}}></CustomButton>
         </View>
       </CustomDespegable>
     </View>
@@ -149,7 +171,7 @@ const styles = StyleSheet.create({
       marginVertical: 2,
     },
     plus_circle: {
-      width: 27,
+      width: 22,
       height: 26,
       marginRight: 9,
     },

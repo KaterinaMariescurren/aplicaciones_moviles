@@ -1,7 +1,8 @@
-import { Stack } from 'expo-router';
+import { Stack, Slot } from 'expo-router';
 
 export default function RootLayout() {
   return (
+
     <Stack
     screenOptions={{
       orientation:'portrait',
@@ -30,7 +31,7 @@ export default function RootLayout() {
       <Stack.Screen 
       name="zonas"
       options={{
-        headerTitle:"Zonas y Puntos de Carga"
+        headerTitle:"CityBell"
       }} />
     </Stack>
   );
