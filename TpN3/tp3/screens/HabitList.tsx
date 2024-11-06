@@ -1,7 +1,6 @@
-// screens/HabitList.tsx
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, FlatList } from 'react-native';
-import {  useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { Colors } from '../constants/Colors';
 import { RootStackParamList } from '../types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,15 +8,19 @@ import { useActivityContext } from '../context/ActivityContext';
 
 type HabitListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitList'>;
 
-const HabitList: React.FC = () => { // Añadido tipo React.FC
+const HabitList: React.FC = () => {
     const navigation = useNavigation<HabitListScreenNavigationProp>();
     const [activeFilter, setActiveFilter] = useState<string>('All');
     const scheme = useColorScheme();
-    const { activities } = useActivityContext();
+    const { activities, markActivityCompleted, removeActivity } = useActivityContext();
     const currentColors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
     const handleFilterPress = (filter: string) => {
         setActiveFilter(filter);
+    };
+
+    const handleCompletionToggle = (activityId: string) => {
+        markActivityCompleted(activityId);
     };
 
     return (
@@ -27,20 +30,34 @@ const HabitList: React.FC = () => { // Añadido tipo React.FC
                 <Text style={[styles.userName, { color: currentColors.text }]}>ToDo</Text>
 
                 <FlatList
-    data={activities}
-    keyExtractor={(item, index) => index.toString()}
-    renderItem={({ item }) => (
-        <View style={[styles.activityItem, { backgroundColor: currentColors.inputBackground }]}>
-            <Text style={[styles.activityTitle, { color: currentColors.text }]}>{item.title}</Text>
-            <Text style={[styles.activityDescription, { color: currentColors.secondaryText }]}>{item.description}</Text>
-            <Text style={[styles.activityDate, { color: currentColors.secondaryText }]}>{item.date}</Text>
-            <Text style={[styles.activityTime, { color: currentColors.secondaryText }]}>{item.time}</Text>
-        </View>
-    )}
-    contentContainerStyle={styles.listContainer}
-/>
-
+                    data={activities}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <View style={[styles.activityItem, { backgroundColor: currentColors.inputBackground }]}>
+                            <View  style={styles.activityHeader}>
+                                <Text style={[styles.activityTitle, { color: currentColors.text }]}>{item.title}</Text>
+                                <TouchableOpacity onPress={() => handleCompletionToggle(item.id)}>
+                                    <View style={[styles.completionCircle, { borderColor: item.completed ? '#FF73FA' : currentColors.text }]}>
+                                        {item.completed && <View style={[styles.completionCircleFilled, { backgroundColor: '#FF73FA' }]} />}
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
+                            <Text style={[styles.activityDescription, { color: currentColors.secondaryText }]}>{item.description}</Text>
+                                <View style={styles.activityDetails}>
+                                    <Text style={[styles.activityDate, { color: currentColors.secondaryText }]}>{item.date}</Text>
+                                    <Text style={[styles.activityTime, { color: currentColors.secondaryText }]}>{item.time}</Text>
+                                </View>
+                            <View style={styles.actionContainer}>
+                                <TouchableOpacity onPress={() => removeActivity(item.id)}>
+                                    <Text style={[styles.deleteButton, { color: currentColors.primaryButton }]}>Eliminar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+                    contentContainerStyle={styles.listContainer}
+                />
             </View>
+
             <View style={styles.addButtonContainer}>
                 <TouchableOpacity onPress={() => navigation.navigate("CreateActivity")}>
                     <View style={[styles.addButton, { backgroundColor: currentColors.primaryButton }]}>
@@ -52,7 +69,6 @@ const HabitList: React.FC = () => { // Añadido tipo React.FC
         </View>
     );
 };
-
 
 const styles = StyleSheet.create({
     container: {
@@ -72,19 +88,6 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
-    },
-    filters: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginBottom: 20,
-    },
-    filterButton: {
-        paddingVertical: 6,
-        paddingHorizontal: 15,
-        borderRadius: 15,
-    },
-    activeFilter: {
-        backgroundColor: Colors.light.filterActiveBackground, // Usar el color de fondo activo
     },
     addButtonContainer: {
         alignItems: 'center',
@@ -109,7 +112,6 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     activityItem: {
-        backgroundColor: Colors.light.inputBackground, // Color de fondo dinámico
         padding: 15,
         borderRadius: 10,
         marginVertical: 8,
@@ -118,6 +120,11 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 3, // Sombra para Android
+    },
+    activityHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     activityTitle: {
         fontSize: 18,
@@ -128,6 +135,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: 4,
     },
+    activityDetails: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
     activityDate: {
         fontSize: 12,
         fontStyle: 'italic',
@@ -136,5 +148,29 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontStyle: 'italic',
     },
+    actionContainer: {
+        flexDirection: 'column',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    deleteButton: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginTop: 8,
+    },
+        completionCircle: {
+        borderRadius: 25,
+        borderWidth: 2,
+        width: 25,
+        height: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    completionCircleFilled: {
+        borderRadius: 25,
+        width: 18,
+        height: 18,
+    },
 });
+
 export default HabitList;
