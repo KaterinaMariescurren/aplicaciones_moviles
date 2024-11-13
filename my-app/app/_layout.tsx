@@ -1,4 +1,4 @@
-import { Stack, Slot } from 'expo-router';
+import { Stack, router } from 'expo-router';
 
 export default function RootLayout() {
   return (
@@ -26,7 +26,8 @@ export default function RootLayout() {
       <Stack.Screen 
       name="ubicacion"
       options={{
-        headerTitle:"Ubicacion"
+        headerTitle:"Ubicacion",
+        headerBackVisible:false,
       }} />
       <Stack.Screen 
       name="mapa"

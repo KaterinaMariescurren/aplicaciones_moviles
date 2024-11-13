@@ -29,7 +29,12 @@ export default function CustomCarList({ autos, addAuto, mode, onSelectAuto }: Cu
   
   // Funciones para abrir y cerrar el bottom sheet
   const openBottomSheet = () => setBottomSheetVisible(true);
-  const closeBottomSheet = () => setBottomSheetVisible(false);
+  const closeBottomSheet = () => {
+    setBottomSheetVisible(false);
+    setMarca("");
+    setModelo("");
+    setPatente("");
+  };
 
   // Función para crear un nuevo auto
   async function createAuto(){
@@ -39,8 +44,12 @@ export default function CustomCarList({ autos, addAuto, mode, onSelectAuto }: Cu
         marca, modelo, patente,
         id: 0
       }; // Crear un objeto auto
-      await (await database).createAuto(newAuto);
-      addAuto(newAuto); // Llamar a la función para agregar el auto
+      const result = await (await database).createAuto(newAuto);
+      const autoWithId: AutoDataBase = {
+        ...newAuto,
+        id: parseInt(result.insertedRowId), // Asignamos el id generado por la base de datos
+      };
+      addAuto(autoWithId); // Llamar a la función para agregar el auto
     }catch(error){
         console.log(error)
     }

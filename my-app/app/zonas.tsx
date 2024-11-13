@@ -40,7 +40,7 @@ export default function Zonas() {
     };
 
     const handlePolygonPress = (index: number) => {
-        Alert.alert("En Horario", 'Precio por hora: $100');
+        Alert.alert("De 07:00 a 10:00 hs", 'Precio por hora: $150');
     };
 
     return(

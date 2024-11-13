@@ -13,6 +13,8 @@ export type EstacionamientoDataBase
     fecha: Date,
     horario: string,
     ubicacion: string,
+    latitude: number,
+    longitude: number,
     activo: number,
     notificar: number,
     auto_id: number
@@ -39,6 +41,8 @@ export async function useDatabase(){
             fecha DATE NOT NULL,
             horario TIME NOT NULL,
             ubicacion TEXT NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
             activo INTEGER NOT NULL DEFAULT 0,
             notificar INTEGER NOT NULL DEFAULT 0,
             auto_id INTEGER NOT NULL REFERENCES auto(id)
@@ -67,14 +71,16 @@ export async function useDatabase(){
     async function createEstacionamiento(data: Omit<EstacionamientoDataBase, "id">) {
         const statement = await database.prepareAsync(
             `INSERT INTO estacionamiento 
-            (fecha, horario, ubicacion, activo, notificar, auto_id) 
-            VALUES ($fecha, $horario, $ubicacion, $activo, $notificar, $auto_id)`
+            (fecha, horario, ubicacion, latitude, longitude, activo, notificar, auto_id) 
+            VALUES ($fecha, $horario, $ubicacion, $latitude, $longitude, $activo, $notificar, $auto_id)`
         );
         try {
             const result = await statement.executeAsync({
                 $fecha: data.fecha.toISOString(), // Guarda la fecha en formato ISO
                 $horario: data.horario,
                 $ubicacion: data.ubicacion,
+                $latitude: data.latitude, 
+                $longitude: data.longitude,
                 $activo: data.activo,
                 $notificar: data.notificar,
                 $auto_id: data.auto_id,

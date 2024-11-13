@@ -5,9 +5,10 @@ import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
 import CustomDespegable from '@/components/CustomDespegable';
 import CustomEstacList from '@/components/CustomEstacList';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { AutoDataBase, EstacionamientoDataBase, useDatabase } from './database/useDatabase';
 import * as FileSystem from 'expo-file-system';
+import { getStreetName } from './APIS/geocodeUtils';
 
 
 
@@ -17,9 +18,16 @@ const InicioScreen = () => {
     const router = useRouter();
     const database = useDatabase()
 
-    // Estado para manejar la ubicación y otras variables
-    const [ubicacion, setUbicacion] = useState("");
+    // Usar useLocalSearchParams para obtener la ubicación directamente de la URL
+    const { ubicacion, fromLocationScreen } = useLocalSearchParams(); // Usar useLocalSearchParams en lugar de router.params
+    const [isLoading, setIsLoading] = useState(false); // Estado para controlar el loading
+
+    // Verificar si `ubicacion` es un arreglo o una cadena
+    const [ubicacionState, setUbicacion] = useState<string>(Array.isArray(ubicacion) ? ubicacion[0] : ubicacion || ""); // Maneja la posible cadena o arreglo
+
     const [notificar, setNotificar] = useState(0);
+    const [latitude, setLatitude] = useState(0);
+    const [longitude, setLongitude] = useState(0);
     const [selectedAutoId, setSelectedAutoId] = useState<number | null>(null); // ID del auto seleccionado
     const [autos, setAutos ] = useState<AutoDataBase[]>([])
     const [estacionamientosActivos, setEstacionamientosActivos] = useState<EstacionamientoDataBase[]>([]); // Estacionamientos activos
@@ -37,12 +45,15 @@ const InicioScreen = () => {
     // Función para abrir el despegable de estacionamiento
     const openBottomEstacionar = () => {
         setBottomSheetVisible(true);
-        setSelectedAutoId(null); // Restablecer auto seleccionado
-        setUbicacion(""); // Restablecer ubicación
+        setUbicacion(ubicacionState); // Restablecer ubicación
     };
 
     // Función para cerrar el despegable
-    const closeBottomEstacionar = () => setBottomSheetVisible(false);
+    const closeBottomEstacionar = () => {
+        setBottomSheetVisible(false);
+        setUbicacion("");
+        
+    };
 
     // Función para manejar la selección de un auto
     const handleSelectAuto = (id: number) => {
@@ -51,7 +62,7 @@ const InicioScreen = () => {
 
     // Función para manejar el cambio del checkbox de notificación
     const handleCheckboxChange = () => {
-        setIsChecked(true);
+        setIsChecked(isChecked === true ? false: true);
         setNotificar(notificar === 0 ? 1 : 0);
     };
 
@@ -99,7 +110,7 @@ const InicioScreen = () => {
                 Alert.alert('Error', 'Selecciona un auto primero.');
                 return;
             }
-            if (ubicacion === "") {
+            if (ubicacionState === "") {
                 Alert.alert('Error', 'Ingresa la ubicación del auto.');
                 return;
             }
@@ -108,10 +119,12 @@ const InicioScreen = () => {
                 id: 0,
                 fecha,
                 horario: formattedTime,
-                ubicacion,
+                ubicacion: ubicacionState,
                 activo: 1,
                 notificar,
-                auto_id: selectedAutoId
+                auto_id: selectedAutoId,
+                latitude: latitude,
+                longitude: longitude 
             };
             // Crear estacionamiento en la base de datos
             await (await database).createEstacionamiento(newEstacionamiento);
@@ -136,6 +149,28 @@ const InicioScreen = () => {
         }
     }
 
+    // Obtener la ubicación del usuario
+    const getLocation = async (latitude: number, longitude: number) => {
+        setIsLoading(true); // Comienza el loading
+        try {
+            
+            // Obtener la dirección a partir de las coordenadas
+            const address = await getStreetName(latitude, longitude);
+            if (address.height === 'Altura desconocida'){
+                setUbicacion(address.street); // Actualiza el estado con la dirección
+            }else{
+                setUbicacion(address.street + " Nº" + address.height); // Actualiza el estado con la dirección
+            }
+            setLatitude(latitude);
+            setLongitude(longitude);
+            setIsLoading(false); // Finaliza el loading
+        } catch (error) {
+        console.error("Error al obtener la ubicación:", error);
+        Alert.alert("Error", "No se pudo obtener la ubicación.");
+        setIsLoading(false); // Finaliza el loading en caso de error
+        }
+    };
+
     useEffect(() => {
         console.log('Autos:');
         listAuto();
@@ -145,14 +180,32 @@ const InicioScreen = () => {
         listEstacionamientosNoActivos();
     }, []);
 
+
+    // Abrir el despegable al regresar a esta pantalla si hay una ubicación
+    useFocusEffect(
+        React.useCallback(() => {
+            if (ubicacion ) {
+                const parsedUbicacion = Array.isArray(ubicacion) ? ubicacion[0] : ubicacion;
+                const data = JSON.parse(parsedUbicacion);
+                getLocation(data.latitude, data.longitude);
+                openBottomEstacionar();
+            }
+            if(fromLocationScreen === 'true'){
+                openBottomEstacionar();
+            }
+        }, [ubicacion, fromLocationScreen])
+    );
+
     const addAuto = (newAuto: AutoDataBase) => {
         setAutos((prevAutos) => [...prevAutos, newAuto]);
     };
 
     const handlePressUbicacion = () => {
         router.push('/ubicacion'); // Redirige a la pantalla indicada
-      };
+    };
     
+    
+
     return (
     <View style={styles.container}>
         <ScrollView>
@@ -194,12 +247,7 @@ const InicioScreen = () => {
                 <Text style={styles.listText}>Dirección:</Text>
                         <View style={styles.containerDireccion}>
                             <View style={styles.itemDia}>
-                                <TextInput
-                                    style={styles.textDia_Horario}
-                                    placeholder="Ingresa la ubicación"
-                                    value={ubicacion}
-                                    onChangeText={setUbicacion}
-                                />
+                                <Text style={styles.textDia_Horario}>{ubicacionState}</Text>
                             </View>
                             <CustomButton title='Ubicacion' onPress={handlePressUbicacion} style={{ height:'70%', marginLeft:25, width:'100%'}}></CustomButton>
                         </View>
