@@ -1,69 +1,77 @@
-import * as React from 'react';
-import MapView, {Marker, Polyline} from 'react-native-maps';
-import { StyleSheet, View } from 'react-native';
-import MapViewDirections from 'react-native-maps-directions';
-import { HERE_MAPS_KEY } from '@env';
+import React, { useState } from 'react';
+import { View, Button } from 'react-native';
+import MapView, { Marker, Polygon } from 'react-native-maps';
+import * as turf from '@turf/turf';
+import polygonData from '@/assets/poligono.json'; // Importa el archivo JSON
 
-export default function App() {
-    const [origin, setOrigin] = React.useState({
-        latitude:-34.870930, 
-        longitude:-58.045802
-    })
+type Location = {
+  latitude: number;
+  longitude: number;
+};
 
-    const [destination, setDestination] = React.useState({
-        latitude:-34.869302, 
-        longitude:-58.044654
-    })
+type MapPressEvent = {
+  nativeEvent: {
+    coordinate: Location;
+  };
+};
 
-    return (
-        <View style={styles.container}>
-            <MapView 
-            style={styles.map} 
-            
-            initialRegion={{
-                latitude: origin.latitude,
-                longitude: origin.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01
-            }}
-            >
+// Función para convertir coordenadas de GeoJSON a formato compatible con Polygon
+const convertCoordinates = (coordinates: number[][][]) => {
+  return coordinates[0].map(([longitude, latitude]) => ({
+    latitude,
+    longitude,
+  }));
+};
 
-                <Marker 
-                    draggable //esto hace que podamos mover el pin
-                    coordinate={origin}
-                    onDragEnd={(direction) => setOrigin(direction.nativeEvent.coordinate)} //aca nos da las coordenadas de donde lo movio
-                />
+const CheckLocationInPolygonScreen = () => {
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
-                <Marker 
-                    draggable //esto hace que podamos mover el pin
-                    coordinate={destination}
-                    onDragEnd={(direction) => setDestination(direction.nativeEvent.coordinate)} //aca nos da las coordenadas de donde lo movio
-                />
-                
-                
-                {/* Hace el recorrido de un punto al otro */}
+  // Convertimos las coordenadas del polígono usando la función
+  const polygonCoords: Location[] = convertCoordinates(polygonData.features[0].geometry.coordinates);
 
-                {/* <MapViewDirections
-                    origin={origin}
-                    destination={destination}
-                    apikey={HERE_MAPS_KEY}
-                    strokeColor='#656CEE'
-                    strokeWidth={6}
-                
-                ></MapViewDirections> */}
+  const handleMapPress = (event: MapPressEvent) => {
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+    setSelectedLocation({ latitude, longitude });
+  };
 
+  const checkIfLocationInPolygon = () => {
+    if (!selectedLocation) return;
 
-            </MapView>
-        </View>
-    );
-}
+    const point = turf.point([selectedLocation.longitude, selectedLocation.latitude]);
+    const polygon = turf.polygon([polygonCoords.map(coord => [coord.longitude, coord.latitude])]);
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    map: {
-        width: '100%',
-        height: '100%',
-    },
-});
+    const isInside = turf.booleanPointInPolygon(point, polygon);
+    alert(isInside ? "La ubicación está dentro del área permitida." : "La ubicación está fuera del área permitida.");
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <MapView
+        style={{ flex: 1 }}
+        initialRegion={{
+          latitude: -34.86616076840948,
+          longitude: -58.04242651239127,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        onPress={handleMapPress}
+      >
+        {selectedLocation && (
+          <Marker
+            coordinate={selectedLocation}
+            title="Ubicación seleccionada"
+          />
+        )}
+        <Polygon
+          coordinates={polygonCoords}
+          strokeColor="#FF0000"
+          fillColor="rgba(255,0,0,0.3)"
+          strokeWidth={2}
+        />
+      </MapView>
+      <Button title="Verificar ubicación" onPress={checkIfLocationInPolygon} />
+    </View>
+  );
+};
+
+export default CheckLocationInPolygonScreen;

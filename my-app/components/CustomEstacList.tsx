@@ -14,7 +14,7 @@ export default function CustomEstacList({ estacionamientos }: CustomEstacListPro
   const router = useRouter();
 
   const handlePress = () => {
-    router.push('/ubicacion'); // Redirige a la pantalla indicada
+    router.push('/mapa'); // Redirige a la pantalla indicada
   };
 
   return (

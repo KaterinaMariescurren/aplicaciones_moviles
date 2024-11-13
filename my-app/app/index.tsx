@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity, Alert, TextInput, Button } from 'react-native';
 import CustomButton from '@/components/CustomButtom';
 import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
@@ -22,7 +22,8 @@ const InicioScreen = () => {
     const [notificar, setNotificar] = useState(0);
     const [selectedAutoId, setSelectedAutoId] = useState<number | null>(null); // ID del auto seleccionado
     const [autos, setAutos ] = useState<AutoDataBase[]>([])
-    const [estacionamientos, setEstacionamientos] = useState<EstacionamientoDataBase[]>([]); // Estacionamientos activos
+    const [estacionamientosActivos, setEstacionamientosActivos] = useState<EstacionamientoDataBase[]>([]); // Estacionamientos activos
+    const [estacionamientosNoActivos, setEstacionamientosNoActivos] =useState<EstacionamientoDataBase[]>([]);
 
     const fecha = new Date();
 
@@ -73,7 +74,18 @@ const InicioScreen = () => {
         try{
             const response = await (await database).listEstacionamientosActivos();
             if (response) {
-                setEstacionamientos(response);
+                setEstacionamientosActivos(response);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async function listEstacionamientosNoActivos() {
+        try{
+            const response = await (await database).listEstacionamientosNoActivos();
+            if (response) {
+                setEstacionamientosNoActivos(response);
             }
         } catch (error) {
             console.log(error);
@@ -105,7 +117,7 @@ const InicioScreen = () => {
             await (await database).createEstacionamiento(newEstacionamiento);
             // Actualizar la lista de estacionamientos activos
             const updatedEstacionamientos = await(await database).listEstacionamientosActivos();
-            setEstacionamientos(updatedEstacionamientos);
+            setEstacionamientosActivos(updatedEstacionamientos);
             closeBottomEstacionar();
         } catch (error) {
             console.log(error);
@@ -129,11 +141,17 @@ const InicioScreen = () => {
         listAuto();
         console.log('Estacionamientos:');
         listEstacionamientosActivos();
+        console.log("Historial:");
+        listEstacionamientosNoActivos();
     }, []);
 
     const addAuto = (newAuto: AutoDataBase) => {
         setAutos((prevAutos) => [...prevAutos, newAuto]);
     };
+
+    const handlePressUbicacion = () => {
+        router.push('/ubicacion'); // Redirige a la pantalla indicada
+      };
     
     return (
     <View style={styles.container}>
@@ -150,13 +168,13 @@ const InicioScreen = () => {
                 <CustomButton title='Sí' onPress={openBottomEstacionar} style={{ width: '100%' }} />
             </View>
             <CustomCarList autos={autos} addAuto={addAuto} mode='popup' onSelectAuto={handleSelectAuto}/>
-            <CustomEstacList estacionamientos={estacionamientos}/>
+            <CustomEstacList estacionamientos={estacionamientosActivos}/>
             <View style={styles.card}>
                 <Text style={styles.cardContent}>¿Quieres ver la zona de estacionamiento medido y puntos de carga?</Text>
             <CustomButton title='Sí' onPress={handlePress} style={{ width: '100%' }} /> 
             </View>
             <View style={styles.cardHistory}>
-                <CustomHistoryList />
+                <CustomHistoryList estacionamientos={estacionamientosNoActivos}/>
             </View>
             <CustomDespegable visible={isBottomSheetVisible} onClose={closeBottomEstacionar} title="Estacionamiento Medido" heightPercentage={0.75}>
                 <CustomCarList autos={autos} addAuto={addAuto} mode='selection' onSelectAuto={handleSelectAuto}/>
@@ -174,7 +192,7 @@ const InicioScreen = () => {
                 </View>
                 {/* Campo para ingresar dirección */}
                 <Text style={styles.listText}>Dirección:</Text>
-                        <View style={styles.containerDia_Horario}>
+                        <View style={styles.containerDireccion}>
                             <View style={styles.itemDia}>
                                 <TextInput
                                     style={styles.textDia_Horario}
@@ -183,6 +201,7 @@ const InicioScreen = () => {
                                     onChangeText={setUbicacion}
                                 />
                             </View>
+                            <CustomButton title='Ubicacion' onPress={handlePressUbicacion} style={{ height:'70%', marginLeft:25, width:'100%'}}></CustomButton>
                         </View>
                 <View style={styles.containerBox}>
                     <TouchableOpacity style={styles.checkboxContainer} onPress={handleCheckboxChange}>
@@ -276,6 +295,11 @@ const styles = StyleSheet.create({
     height:'20%',
     marginBottom:16
     },
+    containerDireccion:{
+        flexDirection: 'row',
+        height:'20%',
+        marginBottom:16
+        },
     itemDia: {
     width: '60%',
     height:'70%',

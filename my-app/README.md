@@ -58,3 +58,5 @@ Join our community of developers creating universal apps.
 - npm install react-native-dropdown-picker
 - npm install expo-linear-gradient
 - npm install expo-location      
+- npm install @turf/turf
+

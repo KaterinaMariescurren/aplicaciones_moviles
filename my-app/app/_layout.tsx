@@ -29,6 +29,11 @@ export default function RootLayout() {
         headerTitle:"Ubicacion"
       }} />
       <Stack.Screen 
+      name="mapa"
+      options={{
+        headerTitle:"Mapa"
+      }} />
+      <Stack.Screen 
       name="zonas"
       options={{
         headerTitle:"CityBell"

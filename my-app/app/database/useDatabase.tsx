@@ -112,5 +112,21 @@ export async function useDatabase(){
         }
     }
 
-    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos}
+    async function listEstacionamientosNoActivos(): Promise<EstacionamientoDataBase[]> {
+        try {
+          const query = `
+            SELECT estacionamiento.*, auto.modelo, auto.marca, auto.patente 
+            FROM estacionamiento 
+            JOIN auto ON estacionamiento.auto_id = auto.id 
+            WHERE estacionamiento.activo = 0
+            `;
+            const results = await database.getAllAsync<EstacionamientoDataBase>(query);
+            return results ?? [];
+        } catch (error) {
+          console.log(error);
+          return []; // Devuelve un array vacío en caso de error
+        }
+    }
+
+    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos, listEstacionamientosNoActivos}
 }
