@@ -1,14 +1,16 @@
+// CreateActivity.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, useColorScheme, Alert } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { useActivityContext } from '../context/ActivityContext';
 import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
 
 export default function CreateActivity() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [importance, setImportance] = useState('Medium');
+    const [importance, setImportance] = useState(''); // Inicializar como vacío
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -33,29 +35,71 @@ export default function CreateActivity() {
         setTime(currentTime.toTimeString().split(' ')[0]);  // Establecer solo la hora
     };
 
+    // Maneja el envío del formulario
     const handleSubmit = () => {
-        addActivity({ title, description, importance, date, time, id: Date.now().toString(), completed: false });
-        navigation.goBack(); // Vuelve a HabitList después de crear la actividad
+        if (!title || !importance) {
+            Alert.alert('Error', 'El título y la importancia son campos obligatorios.');
+            return; // Evitar que se envíe la actividad si falta información
+        }
+        
+        const newActivity = { 
+            id: Date.now().toString(), 
+            title, 
+            description, 
+            importance, 
+            date, 
+            time, 
+            completed: false 
+        };
+        addActivity(newActivity);  // Agregar la actividad al contexto
+        navigation.goBack();  // Volver a la pantalla anterior
     };
 
     return (
         <View style={[styles.container, { backgroundColor: currentColors.background }]}>
             <Text style={[styles.label, { color: currentColors.text }]}>Título de la Actividad</Text>
             <TextInput
-                style={[styles.input, { backgroundColor: currentColors.inputBackground }]}
+                style={[styles.input, { backgroundColor: currentColors.inputBackground, color: currentColors.text }]}
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Título"
-                placeholderTextColor={currentColors.text}
+                placeholderTextColor={currentColors.secondaryText}
             />
             <Text style={[styles.label, { color: currentColors.text }]}>Descripción (opcional)</Text>
             <TextInput
-                style={[styles.input, { backgroundColor: currentColors.inputBackground }]}
+                style={[styles.input, { backgroundColor: currentColors.inputBackground, color: currentColors.text }]}
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Descripción"
-                placeholderTextColor={currentColors.text}
+                placeholderTextColor={currentColors.secondaryText}
             />
+
+            <Text style={{ marginVertical: 8, color: currentColors.text, fontWeight: 'bold' }}>Importancia:</Text>
+            <View style={{
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: currentColors.text,
+                overflow: 'hidden',
+                backgroundColor: currentColors.inputBackground,
+            }}>
+                <Picker
+                    selectedValue={importance}
+                    style={{
+                        height: 50,
+                        width: '100%',
+                        color: currentColors.text,
+                        backgroundColor: currentColors.inputBackground,
+                    }}
+                    onValueChange={(itemValue) => setImportance(itemValue)} // Cambiar el valor de la importancia
+                >
+                    <Picker.Item label="Seleccione una" value="" />
+                    <Picker.Item label="Alta" value="Alta" />
+                    <Picker.Item label="Media" value="Media" />
+                    <Picker.Item label="Baja" value="Baja" />
+                </Picker>
+            </View>
+
+            {/* Mostrar los selectores de fecha y hora */}
             <Text style={[styles.label, { color: currentColors.text }]}>Fecha</Text>
             <TouchableOpacity
                 style={[styles.input, { backgroundColor: currentColors.inputBackground }]}
@@ -71,6 +115,7 @@ export default function CreateActivity() {
                     onChange={handleDateChange}
                 />
             )}
+
             <Text style={[styles.label, { color: currentColors.text }]}>Hora</Text>
             <TouchableOpacity
                 style={[styles.input, { backgroundColor: currentColors.inputBackground }]}
@@ -86,6 +131,8 @@ export default function CreateActivity() {
                     onChange={handleTimeChange}
                 />
             )}
+
+            {/* Botón de creación de actividad */}
             <TouchableOpacity style={[styles.submitButton, { backgroundColor: currentColors.primaryButton }]} onPress={handleSubmit}>
                 <Text style={[styles.submitButtonText, { color: currentColors.buttonText }]}>Crear Actividad</Text>
             </TouchableOpacity>
