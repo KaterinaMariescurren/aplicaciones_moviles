@@ -3,7 +3,8 @@ import { View, Button, Alert, BackHandler } from 'react-native';
 import MapView, { Marker, Polygon } from 'react-native-maps';
 import * as turf from '@turf/turf';
 import polygonData from '@/assets/poligono.json'; // Importa el archivo JSON
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocation } from './LocationContex';
 
 type Location = {
   latitude: number;
@@ -24,9 +25,11 @@ const convertCoordinates = (coordinates: number[][][]) => {
   }));
 };
 
+
 const CheckLocationInPolygonScreen = () => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const router = useRouter(); // Usamos el hook de router
+  const { setLocation } = useLocation(); // Accede a setLocation del contexto
 
   // Convertimos las coordenadas de todos los polígonos del archivo JSON
   const polygonsCoords = polygonData.features.map((feature: any) =>
@@ -54,7 +57,7 @@ const CheckLocationInPolygonScreen = () => {
 
   const handleMapPress = (event: MapPressEvent) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
-    const location = { latitude, longitude };
+    const location2 = { latitude, longitude };
 
     // Verificar si la ubicación está dentro de cualquier polígono EXCEPTO los dos (9 y 4)
     const isInsideAnyPolygon = polygonsCoords.some((polygonCoords, index) => {
@@ -67,11 +70,12 @@ const CheckLocationInPolygonScreen = () => {
     });
 
     // Verificar si la ubicación está dentro del área entre los dos polígonos (la diferencia)
-    const isInsideDifference = checkIfLocationInBetweenPolygons(location);
+    const isInsideDifference = checkIfLocationInBetweenPolygons(location2);
 
     if (isInsideAnyPolygon || isInsideDifference) {
       // Solo actualizar la ubicación si está dentro de un polígono válido (excepto los dos específicos)
-      setSelectedLocation(location);
+      setSelectedLocation(location2);
+      // Si redirectBack está activado, regresar automáticamente
     } else {
       // Mostrar un mensaje si está fuera de los polígonos o fuera del área entre los dos
       Alert.alert("En esta zona no hay estacionamiento medido");
@@ -88,41 +92,30 @@ const CheckLocationInPolygonScreen = () => {
 
   const handleGoBack = () => {
     if (selectedLocation) {
-      // Al regresar, pasamos la ubicación seleccionada a la pantalla anterior
-      router.back();
-      // También pasamos la ubicación a través de params
-      router.push({
-        pathname: '/carga_estacionamiento',
-        params: {
-          ubicacion: JSON.stringify(selectedLocation), // Pasamos la ubicación como string
-        },
-      });
+      setLocation(selectedLocation); // Guarda la ubicación en el contexto
+      router.back(); // Navega de regreso a `estacionamiento`
+    } else {
+      router.back(); // Regresa sin enviar datos si no hay ubicación
     }
   };
+  
 
   // Detectar cuando el usuario presiona el botón de retroceso
   useFocusEffect(
     React.useCallback(() => {
-      const onBackPress = () => {
-        // Redirigir con el parámetro `fromLocationScreen=true`
-        router.push({
-          pathname: '/carga_estacionamiento', // La pantalla a la que vamos (en este caso la pantalla principal)
-          params: {
-            fromLocationScreen: 'true', // Indicamos que venimos desde la pantalla de ubicación
-          },
-        });
-        return true; // Prevenir el comportamiento por defecto (ir hacia atrás sin control)
-      };
+        const onBackPress = () => {
+            handleGoBack(); // Llama a `handleGoBack` en lugar de `router.back()`
+            return true; // Prevenir comportamiento predeterminado
+        };
 
-      // Agregar el listener para el retroceso
-      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+        BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-      // Limpiar el listener cuando la pantalla pierda el foco
-      return () => {
-        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-      };
-    }, [])
-  );
+        return () => {
+            BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+        };
+    }, [selectedLocation])
+);
+
 
   return (
     <View style={{ flex: 1 }}>

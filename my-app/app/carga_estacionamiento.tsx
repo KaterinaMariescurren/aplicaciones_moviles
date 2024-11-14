@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { TouchableOpacity, StyleSheet, Alert, View, Text, Image } from "react-native";
 import { AutoDataBase, EstacionamientoDataBase, useDatabase } from "./database/useDatabase";
 import { getStreetName } from "./APIS/geocodeUtils";
-import { useLocalSearchParams, useRouter } from "expo-router";
-
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { LocationProvider, useLocation } from './LocationContex';
+import React from "react";
 
 export default function estacionamiento() {
     const router = useRouter();
-    const database = useDatabase()
+    const database = useDatabase();
+    const { location, setLocation } = useLocation(); // Accede a la ubicación del contexto
 
     // Verificar si `ubicacion` es un arreglo o una cadena
     const [notificar, setNotificar] = useState(0);
@@ -30,11 +32,7 @@ export default function estacionamiento() {
     
     const [isLoading, setIsLoading] = useState(false); // Estado para controlar el loading
 
-    // Usar useLocalSearchParams para obtener la ubicación directamente de la URL
-    const { ubicacion } = useLocalSearchParams(); // Usar useLocalSearchParams en lugar de router.params
-
-    // Verificar si ubicacion es un arreglo o una cadena
-    const [ubicacionState, setUbicacion] = useState<string>(Array.isArray(ubicacion) ? ubicacion[0] : ubicacion || ""); // Maneja la posible cadena o arreglo
+    const [ubicacionState, setUbicacion] = useState<string>("");
 
     async function listAuto() {
         try {
@@ -54,7 +52,7 @@ export default function estacionamiento() {
                 Alert.alert('Error', 'Selecciona un auto primero.');
                 return;
             }
-            if (ubicacion === "") {
+            if (ubicacionState === "") {
                 Alert.alert('Error', 'Ingresa la ubicación del auto.');
                 return;
             }
@@ -76,6 +74,12 @@ export default function estacionamiento() {
             // Actualizar la lista de estacionamientos activos
             const updatedEstacionamientos = await(await database).listEstacionamientosActivos();
 
+            // Limpia la ubicación después de crear el estacionamiento
+            setUbicacion("");
+            setLocation(null);
+
+            handleGoBack();
+
         } catch (error) {
             console.log(error);
             Alert.alert('Error', 'No se pudo crear el estacionamiento.');
@@ -93,6 +97,22 @@ export default function estacionamiento() {
         setNotificar(notificar === 0 ? 1 : 0);
     };
 
+    const handleGoBack = () => {
+        router.back(); // Regresa sin enviar datos si no hay ubicación
+    };
+
+    useFocusEffect(
+        React.useCallback(() => {
+            // Código ejecutado al enfocar la pantalla (montar)
+            return () => {
+                console.log("Limpiando")
+                // Limpia ubicacionState cuando la pantalla pierde el foco (desmontar)
+                setUbicacion("");
+                setLocation(null);
+            };
+        }, [])
+    );
+
     // Obtener la ubicación del usuario
     const getLocation = async (latitude: number, longitude: number) => {
         setIsLoading(true); // Comienza el loading
@@ -105,8 +125,6 @@ export default function estacionamiento() {
             }else{
                 setUbicacion(address.street + " Nº" + address.height); // Actualiza el estado con la dirección
             }
-            setLatitude(latitude);
-            setLongitude(longitude);
             setIsLoading(false); // Finaliza el loading
         } catch (error) {
         console.error("Error al obtener la ubicación:", error);
@@ -116,8 +134,14 @@ export default function estacionamiento() {
     };
 
     const handlePressUbicacion = () => {
-        router.push('/ubicacion'); // Redirige a la pantalla indicada
+        router.push({
+            pathname: '/ubicacion',
+            params: {
+                redirectBack: "true", // Un indicador para saber que debe volver con datos
+            },
+        });
     };
+    
 
     const addAuto = (newAuto: AutoDataBase) => {
         setAutos((prevAutos) => [...prevAutos, newAuto]);
@@ -127,12 +151,16 @@ export default function estacionamiento() {
         console.log('Autos:');
         listAuto();
 
-        if (ubicacion) {
-            const parsedUbicacion = Array.isArray(ubicacion) ? ubicacion[0] : ubicacion;
-                const data = JSON.parse(parsedUbicacion);
-                getLocation(data.latitude, data.longitude);
+        if (location) {
+            try {
+                setLatitude(location.latitude);
+                setLongitude(location.longitude);
+                getLocation(location.latitude, location.longitude);
+            } catch (error) {
+                console.error("Error al procesar la ubicación:", error);
+            }
         }
-    }, []);
+    }, [location]);
 
     return(
         <View style={styles.container}>
