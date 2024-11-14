@@ -27,7 +27,6 @@ export default function RootLayout() {
       name="ubicacion"
       options={{
         headerTitle:"Ubicacion",
-        headerBackVisible:false,
       }} />
       <Stack.Screen 
       name="mapa"
@@ -38,6 +37,11 @@ export default function RootLayout() {
       name="zonas"
       options={{
         headerTitle:"CityBell"
+      }} />
+      <Stack.Screen 
+      name="carga_estacionamiento"
+      options={{
+        headerTitle:"Cargar estacionamiento"
       }} />
     </Stack>
   );

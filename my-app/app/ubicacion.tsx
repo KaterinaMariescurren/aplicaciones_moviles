@@ -92,7 +92,7 @@ const CheckLocationInPolygonScreen = () => {
       router.back();
       // También pasamos la ubicación a través de params
       router.push({
-        pathname: '/',
+        pathname: '/carga_estacionamiento',
         params: {
           ubicacion: JSON.stringify(selectedLocation), // Pasamos la ubicación como string
         },
@@ -106,7 +106,7 @@ const CheckLocationInPolygonScreen = () => {
       const onBackPress = () => {
         // Redirigir con el parámetro `fromLocationScreen=true`
         router.push({
-          pathname: '/', // La pantalla a la que vamos (en este caso la pantalla principal)
+          pathname: '/carga_estacionamiento', // La pantalla a la que vamos (en este caso la pantalla principal)
           params: {
             fromLocationScreen: 'true', // Indicamos que venimos desde la pantalla de ubicación
           },
