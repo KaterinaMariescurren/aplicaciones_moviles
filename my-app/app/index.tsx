@@ -9,7 +9,7 @@ import { AutoDataBase, EstacionamientoDataBase, useDatabase } from './database/u
 import * as FileSystem from 'expo-file-system';
 import PushNotification from 'react-native-push-notification';
 import BackgroundFetch from 'react-native-background-fetch';
-import { verificarNotificaciones } from './notificaciones/notificaciones';
+import { programarNotificacionDiaria20hs, verificarNotificaciones } from './notificaciones/notificaciones';
 
 const { height } = Dimensions.get('window');
 
@@ -88,6 +88,7 @@ const InicioScreen = () => {
 
     // Configuración de BackgroundFetch para verificar notificaciones en segundo plano
     useEffect(() => {
+        programarNotificacionDiaria20hs();
         BackgroundFetch.configure(
             {
                 minimumFetchInterval: 15, // Ejecuta cada 15 minutos
