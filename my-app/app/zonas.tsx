@@ -40,7 +40,17 @@ export default function Zonas() {
     };
 
     const handlePolygonPress = (index: number) => {
-        Alert.alert("De 07:00 a 10:00 hs", 'Precio por hora: $150');
+        const message = `
+        🕖 De 07:00 a 10:00 hs: 
+        💲 Precio por hora: $150
+        
+        🕙 De 10:00 a 14:00 hs: 
+        💲 Precio por hora: $200
+        
+        🕒 De 14:00 a 18:00 hs: 
+        💲 Precio por hora: $250
+    `;
+        Alert.alert("Precios por franja horaria", message, [{ text: "Cerrar" }],{ cancelable: true });
     };
 
     return(

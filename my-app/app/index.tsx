@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity, Alert, TextInput, Button } from 'react-native';
 import CustomButton from '@/components/CustomButtom';
 import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
 import CustomEstacList from '@/components/CustomEstacList';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { AutoDataBase, EstacionamientoDataBase, useDatabase } from './database/useDatabase';
 import * as FileSystem from 'expo-file-system';
-
-
+import PushNotification from 'react-native-push-notification';
+import BackgroundFetch from 'react-native-background-fetch';
+import { verificarNotificaciones } from './notificaciones/notificaciones';
 
 const { height } = Dimensions.get('window');
 
@@ -25,7 +26,20 @@ const InicioScreen = () => {
     };
 
     const handlePressEstacionamiento = () => {
-        router.push('/carga_estacionamiento'); // Redirige a la pantalla indicada
+        const fecha = new Date();
+        const hora = fecha.getHours(); // Obtiene la hora actual en formato 24 horas
+        if (hora >= 20){
+            Alert.alert(
+                "Información importante",
+                "Desde las (20:00 hs o más tarde) no hay disponibilidad de estacionamiento medido.",
+                [
+                    { text: "Entendido" },
+                    { text: "Más Información", onPress: () => router.push('/zonas') }
+                ],
+                { cancelable: true }
+            );        }else{
+            router.push('/carga_estacionamiento'); // Redirige a la pantalla indicada
+        }
     };
 
     async function listAuto() {
@@ -72,14 +86,38 @@ const InicioScreen = () => {
         }
     }
 
+    // Configuración de BackgroundFetch para verificar notificaciones en segundo plano
     useEffect(() => {
-        console.log('Autos:');
-        listAuto();
-        console.log('Estacionamientos:');
-        listEstacionamientosActivos();
-        console.log("Historial:");
-        listEstacionamientosNoActivos();
+        BackgroundFetch.configure(
+            {
+                minimumFetchInterval: 15, // Ejecuta cada 15 minutos
+                stopOnTerminate: false,   // Continúa ejecutándose si la app se cierra
+                startOnBoot: true,        // Ejecuta al reiniciar el dispositivo
+            },
+            async (taskId) => {
+                console.log("[BackgroundFetch] Verificando notificaciones...");
+                await verificarNotificaciones(); // Llama a la función que revisa los estacionamientos
+                BackgroundFetch.finish(taskId);  // Finaliza la tarea
+            },
+            (error) => {
+                console.error("[BackgroundFetch] Error:", error);
+            }
+        );
+
+        return () => {
+            // Limpieza cuando el componente se desmonta
+            BackgroundFetch.stop();
+        };
     }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            console.log('Actualizando datos en InicioScreen...');
+            listAuto();
+            listEstacionamientosActivos();
+            listEstacionamientosNoActivos();
+        }, [])
+    );
 
     const addAuto = (newAuto: AutoDataBase) => {
         setAutos((prevAutos) => [...prevAutos, newAuto]);

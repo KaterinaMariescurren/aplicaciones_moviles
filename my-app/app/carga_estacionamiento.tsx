@@ -20,9 +20,7 @@ export default function estacionamiento() {
     const [selectedAutoId, setSelectedAutoId] = useState<number | null>(null); // ID del auto seleccionado
     const [autos, setAutos ] = useState<AutoDataBase[]>([])
 
-
     const fecha = new Date();
-    
 
     // Formatear fecha y hora para su uso
     const formattedDate: string = `${fecha.getDate()} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][fecha.getMonth()]}`;
@@ -60,7 +58,7 @@ export default function estacionamiento() {
             const newEstacionamiento: EstacionamientoDataBase ={
                 id: 0,
                 fecha,
-                horario: formattedTime,
+                horario: fecha.getTime(),
                 ubicacion: ubicacionState,
                 activo: 1,
                 notificar,

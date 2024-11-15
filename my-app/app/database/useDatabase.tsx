@@ -11,7 +11,7 @@ export type EstacionamientoDataBase
 = {
     id: number,
     fecha: Date,
-    horario: string,
+    horario: number,
     ubicacion: string,
     latitude: number,
     longitude: number,
@@ -134,5 +134,19 @@ export async function useDatabase(){
         }
     }
 
-    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos, listEstacionamientosNoActivos}
+    async function listEstacionamientosANotificar(): Promise<EstacionamientoDataBase[]> {
+        try {
+          const query = `
+            SELECT * FROM estacionamiento 
+            WHERE notificar = 1 AND activo = 1
+            `;
+            const results = await database.getAllAsync<EstacionamientoDataBase>(query);
+            return results ?? [];
+        } catch (error) {
+          console.log(error);
+          return []; // Devuelve un array vacío en caso de error
+        }
+    }
+
+    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos, listEstacionamientosNoActivos, listEstacionamientosANotificar}
 }
