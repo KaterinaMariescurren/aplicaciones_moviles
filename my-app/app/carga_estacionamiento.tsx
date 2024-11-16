@@ -1,11 +1,11 @@
 import CustomButton from "@/components/CustomButtom";
 import CustomCarList from "@/components/CustomCarList";
 import { useEffect, useState } from "react";
-import { TouchableOpacity, StyleSheet, Alert, View, Text, Image } from "react-native";
+import { StyleSheet, Alert, View, Text, Image } from "react-native";
 import { AutoDataBase, EstacionamientoDataBase, useDatabase } from "./database/useDatabase";
 import { getStreetName } from "./APIS/geocodeUtils";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { LocationProvider, useLocation } from './LocationContex';
+import { useFocusEffect, useRouter } from "expo-router";
+import { useLocation } from './LocationContex';
 import React from "react";
 
 export default function estacionamiento() {
@@ -13,8 +13,6 @@ export default function estacionamiento() {
     const database = useDatabase();
     const { location, setLocation } = useLocation(); // Accede a la ubicación del contexto
 
-    // Verificar si `ubicacion` es un arreglo o una cadena
-    const [notificar, setNotificar] = useState(0);
     const [latitude, setLatitude] = useState(0);
     const [longitude, setLongitude] = useState(0);
     const [selectedAutoId, setSelectedAutoId] = useState<number | null>(null); // ID del auto seleccionado
@@ -25,8 +23,6 @@ export default function estacionamiento() {
     // Formatear fecha y hora para su uso
     const formattedDate: string = `${fecha.getDate()} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][fecha.getMonth()]}`;
     const formattedTime: string = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')} hs`;
-
-    const [isChecked, setIsChecked] = useState(false);
     
     const [isLoading, setIsLoading] = useState(false); // Estado para controlar el loading
 
@@ -61,7 +57,6 @@ export default function estacionamiento() {
                 horario: fecha.getTime(),
                 ubicacion: ubicacionState,
                 activo: 1,
-                notificar,
                 auto_id: selectedAutoId,
                 latitude: latitude,
                 longitude: longitude 
@@ -89,11 +84,6 @@ export default function estacionamiento() {
         setSelectedAutoId(id);
     };
 
-    // Función para manejar el cambio del checkbox de notificación
-    const handleCheckboxChange = () => {
-        setIsChecked(isChecked === true ? false: true);
-        setNotificar(notificar === 0 ? 1 : 0);
-    };
 
     const handleGoBack = () => {
         router.back(); // Regresa sin enviar datos si no hay ubicación
@@ -142,7 +132,7 @@ export default function estacionamiento() {
     
 
     const addAuto = (newAuto: AutoDataBase) => {
-        setAutos((prevAutos) => [...prevAutos, newAuto]);
+        setAutos((prevAutos: any) => [...prevAutos, newAuto]);
     };
     
     useEffect(() => {
@@ -183,12 +173,6 @@ export default function estacionamiento() {
                             </View>
                             <CustomButton title='Ubicacion' onPress={handlePressUbicacion} style={{ height:'70%', marginLeft:25, width:'100%'}}></CustomButton>
                         </View>
-                <View style={styles.containerBox}>
-                    <TouchableOpacity style={styles.checkboxContainer} onPress={handleCheckboxChange}>
-                    <View style={[styles.checkbox, isChecked && styles.checked]} />
-                    <Text style={styles.label}>Notificarme cada 1 hs</Text>
-                    </TouchableOpacity>
-                </View>
                 <CustomButton title='Empezar' onPress={createEstacionamiento} style={{ paddingVertical: 10 }} />
                 </View>
         </View>
@@ -262,29 +246,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 5,
-        color: '#203D65',
-    },
-    containerBox: {
-        flex: 1,
-    },
-    checkboxContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-    },
-    checkbox: {
-        width: 30,
-        height: 30,
-        borderWidth: 2,
-        borderColor: '#656CEE',
-        borderRadius: 4,
-        marginRight: 10,
-        backgroundColor: 'white',
-    },
-    checked: {
-        backgroundColor: '#656CEE',
-    },
-    label: {
-        fontSize: 20,
         color: '#203D65',
     },
 });

@@ -16,7 +16,6 @@ export type EstacionamientoDataBase
     latitude: number,
     longitude: number,
     activo: number,
-    notificar: number,
     auto_id: number
     modelo?: string,
     marca?: string,
@@ -44,7 +43,6 @@ export async function useDatabase(){
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
             activo INTEGER NOT NULL DEFAULT 0,
-            notificar INTEGER NOT NULL DEFAULT 0,
             auto_id INTEGER NOT NULL REFERENCES auto(id)
         );
     `)
@@ -71,8 +69,8 @@ export async function useDatabase(){
     async function createEstacionamiento(data: Omit<EstacionamientoDataBase, "id">) {
         const statement = await database.prepareAsync(
             `INSERT INTO estacionamiento 
-            (fecha, horario, ubicacion, latitude, longitude, activo, notificar, auto_id) 
-            VALUES ($fecha, $horario, $ubicacion, $latitude, $longitude, $activo, $notificar, $auto_id)`
+            (fecha, horario, ubicacion, latitude, longitude, activo, auto_id) 
+            VALUES ($fecha, $horario, $ubicacion, $latitude, $longitude, $activo, $auto_id)`
         );
         try {
             const result = await statement.executeAsync({
@@ -82,7 +80,6 @@ export async function useDatabase(){
                 $latitude: data.latitude, 
                 $longitude: data.longitude,
                 $activo: data.activo,
-                $notificar: data.notificar,
                 $auto_id: data.auto_id,
             });
             return { insertedRowId: result.lastInsertRowId.toLocaleString() };
@@ -172,19 +169,5 @@ export async function useDatabase(){
         }
     }
 
-    async function listEstacionamientosANotificar(): Promise<EstacionamientoDataBase[]> {
-        try {
-            const query = `
-            SELECT * FROM estacionamiento 
-            WHERE notificar = 1 AND activo = 1
-            `;
-            const results = await database.getAllAsync<EstacionamientoDataBase>(query);
-            return results ?? [];
-        } catch (error) {
-          console.log(error);
-          return []; // Devuelve un array vacío en caso de error
-        }
-    }
-
-    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos, listEstacionamientosNoActivos, listEstacionamientosANotificar, getEstacionamientoById, setActivoToZero }
+    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos, listEstacionamientosNoActivos, getEstacionamientoById, setActivoToZero }
 }

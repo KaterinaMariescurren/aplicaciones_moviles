@@ -3,7 +3,7 @@ import { View, Button, Alert, BackHandler } from 'react-native';
 import MapView, { Marker, Polygon } from 'react-native-maps';
 import * as turf from '@turf/turf';
 import polygonData from '@/assets/poligono.json'; // Importa el archivo JSON
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useLocation } from './LocationContex';
 
 type Location = {

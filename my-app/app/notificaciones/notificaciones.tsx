@@ -1,72 +1,72 @@
-import { EstacionamientoDataBase, useDatabase } from "../database/useDatabase";
-import PushNotification from 'react-native-push-notification';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 
-const verificarNotificaciones = async () => {
-    const database = useDatabase();
-    const ahora = new Date();
-    
-    // Obtén todos los estacionamientos activos y a notificar
-    const estacionamientosActivos = await (await database).listEstacionamientosANotificar();
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+});
 
-    estacionamientosActivos.forEach((estacionamiento) => {
-        const horaEstacionamiento = new Date(estacionamiento.horario);
-        const horasTranscurridas = Math.floor((ahora.getTime() - horaEstacionamiento.getTime()) / (1000 * 60 * 60));
-
-        // Si ha pasado al menos 1 hora y es un múltiplo exacto
-        if (horasTranscurridas > 0 && horasTranscurridas % 1 === 0) {
-            programarNotificacionesRecurrentes(estacionamiento);
-        }
-    });
-};
-
-const programarNotificacionDiaria20hs = async () => {
-    const notificacionProgramada = await AsyncStorage.getItem('notificacion20hs');
-
-    if (notificacionProgramada) {
-        console.log("La notificación diaria ya está programada.");
+async function registerForPushNotificationsAsync() {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') {
+      const { status: newStatus } = await Notifications.requestPermissionsAsync();
+      if (newStatus !== 'granted') {
+        alert('Permisos para notificaciones no otorgados.');
         return;
+      }
     }
+    console.log('Permisos otorgados para notificaciones.');
+  }
 
-    const ahora = new Date();
-    const hora20hs = new Date();
-    hora20hs.setHours(17, 10, 0, 0);
-
-    if (ahora > hora20hs) {
-        hora20hs.setDate(hora20hs.getDate() + 1);
+// Esta función se encarga de programar las notificaciones a las 19:40 y 20:00
+const programarNotificacionesDiarias = async () => {
+    // Obtener la fecha y hora actual
+    const now = new Date();
+  
+    // Programar la primera notificación para las 19:40
+    const hora1940 = new Date();
+    hora1940.setHours(19, 40, 0, 0); // Establecer las 19:40
+  
+    // Si ya pasó la hora de las 19:40 hoy, programamos para mañana
+    if (now.getHours() >= 19 && now.getMinutes() >= 40) {
+      hora1940.setDate(hora1940.getDate() + 1); // Programar para el siguiente día
     }
-
-    PushNotification.localNotificationSchedule({
-        title: "Recordatorio Diario",
-        message: "Recuerda que a partir de las 20:00 horas no hay disponibilidad de estacionamiento medido.",
-        date: hora20hs,
-        repeatType: 'day',
-        allowWhileIdle: true,
+  
+    // Programar la segunda notificación para las 20:00
+    const hora2000 = new Date();
+    hora2000.setHours(20, 0, 0, 0); // Establecer las 20:00
+  
+    // Si ya pasó la hora de las 20:00 hoy, programamos para mañana
+    if (now.getHours() >= 20 && now.getMinutes() >= 0) {
+      hora2000.setDate(hora2000.getDate() + 1); // Programar para el siguiente día
+    }
+  
+    // Eliminar todas las notificaciones programadas anteriormente para evitar duplicados
+    await Notifications.cancelAllScheduledNotificationsAsync();
+  
+    // Programar la notificación de las 19:40
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "¡ATENCIÓN!",
+        body: "Recuerda que se está agotando el tiempo de tu estacionamiento medido. Ingresa a la aplicación y finaliza los estacionamientos activos para evitar cargos adicionales. ¡Gracias por tu colaboración!",
+      },
+      trigger: {
+        date: hora1940, // Fecha y hora para la primera notificación
+      },
     });
-
-    console.log("Notificación diaria programada para las 20:00 horas.");
-    await AsyncStorage.setItem('notificacion20hs', 'true');
+  
+    // Programar la notificación de las 20:00
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title:"¡Atención! Tu tiempo de estacionamiento ha finalizado",
+        body: "Recuerda que el tiempo de estacionamiento medido ya terminó. No olvides finalizar tu estacionamiento para evitar cargos adicionales. ¡Gracias por tu atención!",
+      },
+      trigger: {
+        date: hora2000, // Fecha y hora para la segunda notificación
+      },
+    });
 };
 
-
-
-// Función para programar las notificaciones recurrentes
-const programarNotificacionesRecurrentes = (estacionamiento: EstacionamientoDataBase) => {
-    const horaEstacionamiento = new Date(estacionamiento.horario);
-
-    for (let i = 1; i <= 24; i++) { // Programa notificaciones para 24 horas
-        const horaNotificacion = new Date(horaEstacionamiento.getTime() + i * 60 * 60 * 1000); // Cada hora
-
-        PushNotification.localNotificationSchedule({
-            title: "Recordatorio de Estacionamiento",
-            message: `Han pasado ${i} hora(s) desde que estacionaste el vehículo con patente ${estacionamiento.patente}
-            en ${estacionamiento.ubicacion}.`,
-            date: horaNotificacion, // Hora específica
-            allowWhileIdle: true, // Permite que la notificación se muestre cuando la app esté inactiva
-        });
-    }
-
-    console.log("Notificaciones programadas para 24 horas.");
-};
-
-export {verificarNotificaciones, programarNotificacionDiaria20hs}
+export { programarNotificacionesDiarias, registerForPushNotificationsAsync }

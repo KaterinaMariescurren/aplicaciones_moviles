@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity, Alert, TextInput, Button } from 'react-native';
+import { View, Text, StyleSheet, Image, Dimensions, ScrollView, Alert } from 'react-native';
 import CustomButton from '@/components/CustomButtom';
 import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
@@ -7,9 +7,7 @@ import CustomEstacList from '@/components/CustomEstacList';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { AutoDataBase, EstacionamientoDataBase, useDatabase } from './database/useDatabase';
 import * as FileSystem from 'expo-file-system';
-import PushNotification from 'react-native-push-notification';
-import BackgroundFetch from 'react-native-background-fetch';
-import { programarNotificacionDiaria20hs, verificarNotificaciones } from './notificaciones/notificaciones';
+import { programarNotificacionesDiarias, registerForPushNotificationsAsync } from './notificaciones/notificaciones';
 
 const { height } = Dimensions.get('window');
 
@@ -86,29 +84,14 @@ const InicioScreen = () => {
         }
     }
 
-    // Configuración de BackgroundFetch para verificar notificaciones en segundo plano
+    // useEffect para programar las notificaciones y registrar la tarea en segundo plano
     useEffect(() => {
-        programarNotificacionDiaria20hs();
-        BackgroundFetch.configure(
-            {
-                minimumFetchInterval: 15, // Ejecuta cada 15 minutos
-                stopOnTerminate: false,   // Continúa ejecutándose si la app se cierra
-                startOnBoot: true,        // Ejecuta al reiniciar el dispositivo
-            },
-            async (taskId) => {
-                console.log("[BackgroundFetch] Verificando notificaciones...");
-                await verificarNotificaciones(); // Llama a la función que revisa los estacionamientos
-                BackgroundFetch.finish(taskId);  // Finaliza la tarea
-            },
-            (error) => {
-                console.error("[BackgroundFetch] Error:", error);
-            }
-        );
 
-        return () => {
-            // Limpieza cuando el componente se desmonta
-            BackgroundFetch.stop();
-        };
+        registerForPushNotificationsAsync();
+
+        // Programar las notificaciones al iniciar la app
+        programarNotificacionesDiarias();
+
     }, []);
 
     useFocusEffect(
@@ -121,7 +104,7 @@ const InicioScreen = () => {
     );
 
     const addAuto = (newAuto: AutoDataBase) => {
-        setAutos((prevAutos) => [...prevAutos, newAuto]);
+        setAutos((prevAutos: any) => [...prevAutos, newAuto]);
     };
 
     // Función para manejar la selección de un auto
