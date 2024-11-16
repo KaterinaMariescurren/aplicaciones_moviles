@@ -91,6 +91,44 @@ export async function useDatabase(){
         }
     }
 
+    async function getEstacionamientoById(estacionamientoId: number): Promise<EstacionamientoDataBase | null> {
+        try {
+            const query = `
+                SELECT estacionamiento.*, auto.modelo, auto.marca, auto.patente
+                FROM estacionamiento
+                JOIN auto ON estacionamiento.auto_id = auto.id
+                WHERE estacionamiento.id = $id
+            `;
+            
+            const result = await database.getAllSync<EstacionamientoDataBase>(query, {
+                $id: estacionamientoId,
+            });
+    
+            // Si la consulta no devuelve un resultado, retornamos null
+            return result[0] ?? null;
+        } catch (error) {
+            console.error('Error al obtener estacionamiento por id:', error);
+            return null;
+        }
+    }
+
+    async function setActivoToZero(id: number): Promise<boolean> {
+        try {
+            const statement = await database.prepareAsync(
+                'UPDATE estacionamiento SET activo = 0 WHERE id = $id'
+            );
+            const result = await statement.executeAsync({ $id: id });
+
+            // Usar result.changes para obtener el número de filas afectadas
+            return result.changes > 0;  // Si se afectaron filas, la actualización fue exitosa
+        } catch (error) {
+            console.error('Error al actualizar el valor de activo:', error);
+            return false;
+        }
+    }
+    
+
+
     async function listAuto(): Promise<AutoDataBase[]> {
         try {
           const query = "SELECT * from auto";
@@ -104,7 +142,7 @@ export async function useDatabase(){
 
     async function listEstacionamientosActivos(): Promise<EstacionamientoDataBase[]> {
         try {
-          const query = `
+            const query = `
             SELECT estacionamiento.*, auto.modelo, auto.marca, auto.patente 
             FROM estacionamiento 
             JOIN auto ON estacionamiento.auto_id = auto.id 
@@ -113,14 +151,14 @@ export async function useDatabase(){
             const results = await database.getAllAsync<EstacionamientoDataBase>(query);
             return results ?? [];
         } catch (error) {
-          console.log(error);
+            console.log(error);
           return []; // Devuelve un array vacío en caso de error
         }
     }
 
     async function listEstacionamientosNoActivos(): Promise<EstacionamientoDataBase[]> {
         try {
-          const query = `
+            const query = `
             SELECT estacionamiento.*, auto.modelo, auto.marca, auto.patente 
             FROM estacionamiento 
             JOIN auto ON estacionamiento.auto_id = auto.id 
@@ -136,7 +174,7 @@ export async function useDatabase(){
 
     async function listEstacionamientosANotificar(): Promise<EstacionamientoDataBase[]> {
         try {
-          const query = `
+            const query = `
             SELECT * FROM estacionamiento 
             WHERE notificar = 1 AND activo = 1
             `;
@@ -148,5 +186,5 @@ export async function useDatabase(){
         }
     }
 
-    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos, listEstacionamientosNoActivos, listEstacionamientosANotificar}
+    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos, listEstacionamientosNoActivos, listEstacionamientosANotificar, getEstacionamientoById, setActivoToZero }
 }

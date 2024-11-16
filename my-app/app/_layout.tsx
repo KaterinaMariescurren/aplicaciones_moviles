@@ -1,9 +1,11 @@
 import { Stack, router } from 'expo-router';
 import { LocationProvider } from './LocationContex';
+import { EstacionamientoProvider } from './EstacionamientoContext';
 
 export default function RootLayout() {
   return (
     <LocationProvider>
+      <EstacionamientoProvider>
       <Stack
       screenOptions={{
         orientation:'portrait',
@@ -45,6 +47,7 @@ export default function RootLayout() {
           headerTitle:"Cargar estacionamiento"
         }} />
       </Stack>
+      </EstacionamientoProvider>
     </LocationProvider>
   );
 }

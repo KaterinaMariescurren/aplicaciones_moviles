@@ -3,6 +3,7 @@ import CustomButton from "./CustomButtom";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { AutoDataBase, EstacionamientoDataBase, useDatabase } from "@/app/database/useDatabase";
+import { useEstacionamiento } from "@/app/EstacionamientoContext";
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,9 +13,11 @@ interface CustomEstacListProps {
 
 export default function CustomEstacList({ estacionamientos }: CustomEstacListProps) {
   const router = useRouter();
+  const { setEstacionamientoId } = useEstacionamiento();
 
-  const handlePress = () => {
-    router.push('/mapa'); // Redirige a la pantalla indicada
+  const handlePress = (id: number) => {
+    setEstacionamientoId(id); // Establecemos el id en el contexto
+    router.push('/mapa');
   };
 
   return (
@@ -35,7 +38,7 @@ export default function CustomEstacList({ estacionamientos }: CustomEstacListPro
             <CustomButton 
               title="Ver" 
               style={{ width: '75%', alignSelf: 'center' }}
-              onPress={handlePress}
+              onPress={() => handlePress(item.id)}
             />
           </View>
         )}
