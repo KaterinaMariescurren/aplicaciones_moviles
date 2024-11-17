@@ -51,10 +51,15 @@ Join our community of developers creating universal apps.
 
 ## Comandos extras
 - npm install -g expo-cli
-- expo install expo-location 
 - npm install react-native-maps-directions
 - npx expo install expo-sqlite
 - npm install react-native-dotenv
-- expo install @react-native-community/geolocation
 - npx expo install react-native-maps
-- expo install react-native-vector-icons
+- npm install react-native-dropdown-picker
+- npm install expo-linear-gradient
+- npm install expo-location      
+- npm install @turf/turf
+- npm install --save react-native-push-notification
+- npm install react-native-background-fetch
+
+

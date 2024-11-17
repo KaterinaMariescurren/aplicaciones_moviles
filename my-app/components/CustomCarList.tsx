@@ -8,55 +8,98 @@ import CustomDespegableDelete from "./CustomDespegableDelete";
 
 const { width, height } = Dimensions.get('window');
 
-export default function CustomList() {
+// Definimos la interfaz para las props del componente
+interface CustomCarListProps {
+  autos: AutoDataBase[]; // Tipo de la lista de autos
+  addAuto: (newAuto: AutoDataBase) => void; // Tipo de la función para agregar un auto
+  eliminarAutoDesdeLista?: (id:number) => void
+  mode: "popup" | "selection"; // Modo de la lista (emergente o selección)
+  onSelectAuto: (id: number) => void; // Función para manejar la selección de un auto
+}
 
-  const [marca, setMarca] = useState("")
-  const [modelo, setModelo] = useState("")
-  const [patente, setPatente ] = useState("")
-  const [autos, setAutos ] = useState<AutoDataBase[]>([])
+export default function CustomCarList({ autos, addAuto, mode, onSelectAuto, eliminarAutoDesdeLista }: CustomCarListProps) {
+  const database = useDatabase();
+  
+  const [marca, setMarca] = useState("");
+  const [modelo, setModelo] = useState("");
+  const [patente, setPatente ] = useState("");
 
-  const database = useDatabase()
+  const [modeBoton, setModeBoton ] = useState(false);
 
+  // Estados para el manejo del bottom sheet y el auto seleccionado
+  const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
+  const [selectedAuto, setSelectedAuto] = useState<AutoDataBase | null>(null);
+  
+  // Funciones para abrir y cerrar el bottom sheet
+  const openBottomSheet = () => {
+    setMarca("");
+    setModelo("");
+    setPatente("");
+    setModeBoton(false);
+    setBottomSheetVisible(true); // Show the bottom sheet
+  };
+  
+  // Cerrar el bottom sheet
+  const closeBottomSheet = () => {
+    setBottomSheetVisible(false);
+    setSelectedAuto(null); // Reiniciar el auto seleccionado
+  };
+
+  // Función para crear un nuevo auto
   async function createAuto(){
     try{
-        (await database).createAuto({marca,modelo,patente})
-
-        listAuto()
+      console.log('Creando un Auto');
+      const newAuto: AutoDataBase = {
+        marca, modelo, patente,
+        id: 0
+      }; // Crear un objeto auto
+      const result = await (await database).createAuto(newAuto);
+      const autoWithId: AutoDataBase = {
+        ...newAuto,
+        id: parseInt(result.insertedRowId), // Asignamos el id generado por la base de datos
+      };
+      addAuto(autoWithId); // Llamar a la función para agregar el auto
     }catch(error){
         console.log(error)
     }
   }
 
-  async function listAuto() {
+  // Función para eliminar un auto
+  async function eliminarAuto(){
     try {
-      const response = await (await database).listAuto();
-      if (response) {
-        setAutos(response);
+
+      if (!selectedAuto) {
+        Alert.alert("No hay auto seleccionado");
+        return;
       }
+      if (!eliminarAutoDesdeLista) {
+        Alert.alert("No hay funcion para eliminar");
+        return;
+      }
+      console.log("Eliminando Auto");
+      await (await database).eliminarAuto(selectedAuto.id);
+      
+      // Llama a la función recibida como prop para actualizar la lista
+      eliminarAutoDesdeLista(selectedAuto.id);
     } catch (error) {
-      console.log(error);
+      console.error("Error al eliminar el auto", error);
+      Alert.alert("Error al eliminar el auto");
     }
   }
 
-  useEffect(() => {
-    listAuto();  // Cargar los autos cuando el componente se monte
-  }, []);
-
-  const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
-  const [isBottomDeleteVisible, setBottomDeleteVisible] = useState(false);
-  const [selectedAuto, setSelectedAuto] = useState<AutoDataBase | null>(null);
-  const [despegableTitle, setDespegableTitle] = useState("");
-
-  const openBottomSheet = () => setBottomSheetVisible(true);
-  const closeBottomSheet = () => setBottomSheetVisible(false);
-
-  const openBottomDelete = () => setBottomDeleteVisible(true);
-  const closeBottomDelete = () => setBottomDeleteVisible(false);
-
+  // Maneja la selección de un auto
   const handleItemPress = (item: AutoDataBase) => {
-    setSelectedAuto(item); // Guardar el auto seleccionado
-    setDespegableTitle(`${item.marca} ${item.modelo}`); // Actualizar el título del despegable
-    openBottomDelete(); // Abrir el despegable
+    setSelectedAuto(item); // Asegúrate de actualizar el auto seleccionado correctamente.
+    if (mode === "popup") {
+      // Si el modo es popup, abre el bottom sheet directamente
+      setMarca(item.marca);
+      setModelo(item.modelo);
+      setPatente(item.patente);
+      setModeBoton(true); // Habilita el botón de eliminar
+      setBottomSheetVisible(true); // Muestra el bottom sheet
+    } else if (mode === "selection") {
+      onSelectAuto(item.id); // Llama a la función onSelectAuto para pasar el id del auto
+    }
   };
 
   const [openMarca, setOpenMarca] = useState(false);
@@ -73,6 +116,31 @@ export default function CustomList() {
     { label: 'X5', value: 'x5' },
   ]);
 
+  const renderAutoItem = React.useCallback(({ item }: { item: AutoDataBase }) => (
+    <TouchableOpacity
+      onPress={() => handleItemPress(item)}
+      style={[
+        styles.item,
+        mode === "selection" && selectedAuto?.id === item.id && {
+          borderColor: "#FF4500",
+          borderWidth: 2,
+        },
+      ]}
+    >
+      <View style={styles.view_auto}>
+        <Image
+          source={require("../assets/images/auto.png")}
+          resizeMode="contain"
+          style={styles.auto}
+        />
+        <Text style={styles.textName}>
+          {item.marca} {item.modelo}
+        </Text>
+      </View>
+      <Text style={styles.textPatent}>{item.patente}</Text>
+    </TouchableOpacity>
+  ), [selectedAuto, mode]); // Solo se actualiza cuando `selectedAuto` o `mode` cambian
+
   return (
     <View style={styles.listContainer}>
       <View style={styles.view_plus_circle}>
@@ -85,19 +153,10 @@ export default function CustomList() {
         data={autos}
         horizontal
         keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => handleItemPress(item)} style={styles.item}>
-            <View style={styles.view_auto}>
-              <Image source={require('../assets/images/auto.png')} resizeMode="contain" style={styles.auto}></Image>
-              <Text style={styles.textName}>{item.marca} {item.modelo}</Text>
-            </View>
-            <Text style={styles.textPatent}>{item.patente}</Text>
-          </TouchableOpacity>
-        )}
+        renderItem={renderAutoItem} // Usamos la versión memoizada de renderItem
         ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
         showsHorizontalScrollIndicator={false}
       />
-      <CustomDespegableDelete visible={isBottomDeleteVisible} onClose={closeBottomDelete} title={despegableTitle} children={undefined}></CustomDespegableDelete>
       <CustomDespegable visible={isBottomSheetVisible} onClose={closeBottomSheet} title="Auto">
         <View style={styles.container}>
           <DropDownPicker
@@ -132,8 +191,22 @@ export default function CustomList() {
             value={patente}
             onChangeText={setPatente}
           />
-          <CustomButton title="Agregar" onPress={() => {createAuto();closeBottomSheet();}}  
-          style={{marginVertical:30, height:'35%',}}></CustomButton>
+          <CustomButton
+            title={mode === "popup" && modeBoton===true ? "Eliminar" : "Agregar"}
+            onPress={() => {
+              if (mode === "popup" && modeBoton===true) {
+                // Aquí llamas a la función para eliminar el auto
+                eliminarAuto();
+                closeBottomSheet();
+              } else {
+                // Aquí llamas a la función para agregar un auto
+                createAuto();
+                closeBottomSheet();
+              }
+            }}
+            style={{ marginVertical: 30, height: '35%' }}
+          />
+          
         </View>
       </CustomDespegable>
     </View>

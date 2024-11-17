@@ -1,34 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, Dimensions, ScrollView, Alert } from 'react-native';
 import CustomButton from '@/components/CustomButtom';
 import CustomCarList from '@/components/CustomCarList';
 import CustomHistoryList from '@/components/CustomHistoryList';
-import CustomDespegable from '@/components/CustomDespegable';
 import CustomEstacList from '@/components/CustomEstacList';
-import { useRouter } from 'expo-router';
-import { AutoDataBase, useDatabase } from './database/useDatabase';
-
+import { useFocusEffect, useRouter } from 'expo-router';
+import { AutoDataBase, EstacionamientoDataBase, useDatabase } from './database/useDatabase';
+import * as FileSystem from 'expo-file-system';
+import { programarNotificacionesDiarias, registerForPushNotificationsAsync } from './notificaciones/notificaciones';
 
 const { height } = Dimensions.get('window');
 
 const InicioScreen = () => {
-
-    const [marca, setMarca] = useState("")
-    const [modelo, setModelo] = useState("")
-    const [patente, setPatente ] = useState("")
-    const [autos, setAutos ] = useState<AutoDataBase[]>([])
-
+    const router = useRouter();
     const database = useDatabase()
 
-    async function createAuto(){
-        try{
-        (await database).createAuto({marca,modelo,patente})
+    const [autos, setAutos ] = useState<AutoDataBase[]>([])
+    const [estacionamientosActivos, setEstacionamientosActivos] = useState<EstacionamientoDataBase[]>([]); // Estacionamientos activos
+    const [estacionamientosNoActivos, setEstacionamientosNoActivos] =useState<EstacionamientoDataBase[]>([]);
 
-            listAuto()
-        }catch(error){
-            console.log(error)
+    const handlePress = () => {
+        router.push('/zonas'); // Redirige a la pantalla indicada
+    };
+
+    const handlePressEstacionamiento = () => {
+        const fecha = new Date();
+        const hora = fecha.getHours(); // Obtiene la hora actual en formato 24 horas
+        if (hora >= 20){
+            Alert.alert(
+                "Información importante",
+                "Desde las (20:00 hs o más tarde) no hay disponibilidad de estacionamiento medido.",
+                [
+                    { text: "Entendido" },
+                    { text: "Más Información", onPress: () => router.push('/zonas') }
+                ],
+                { cancelable: true }
+            );        }else{
+            router.push('/carga_estacionamiento'); // Redirige a la pantalla indicada
         }
-    }
+    };
 
     async function listAuto() {
         try {
@@ -41,48 +51,73 @@ const InicioScreen = () => {
         }
     }
 
+    async function listEstacionamientosActivos() {
+        try{
+            const response = await (await database).listEstacionamientosActivos();
+            if (response) {
+                setEstacionamientosActivos(response);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async function listEstacionamientosNoActivos() {
+        try{
+            const response = await (await database).listEstacionamientosNoActivos();
+            if (response) {
+                setEstacionamientosNoActivos(response);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async function eliminarBaseDeDatos() {
+        const databaseFilePath = `${FileSystem.documentDirectory}SQLite/medidoCityBell.db`; // Ajusta el nombre a tu base de datos
+    
+        try {
+            await FileSystem.deleteAsync(databaseFilePath);
+            console.log("Base de datos eliminada correctamente");
+        } catch (error) {
+            console.error("Error al eliminar la base de datos:", error);
+        }
+    }
+
+    // useEffect para programar las notificaciones y registrar la tarea en segundo plano
     useEffect(() => {
-        listAuto();  // Cargar los autos cuando el componente se monte
+
+        registerForPushNotificationsAsync();
+
+        // Programar las notificaciones al iniciar la app
+        programarNotificacionesDiarias();
+
     }, []);
 
-    const router = useRouter();
-    const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
-    const [isChecked, setIsChecked] = useState(false);
+    useFocusEffect(
+        useCallback(() => {
+            console.log('Actualizando datos en InicioScreen...');
+            listAuto();
+            listEstacionamientosActivos();
+            listEstacionamientosNoActivos();
+        }, [])
+    );
 
-    const openBottomEstacionar = () => setBottomSheetVisible(true);
-    const closeBottomEstacionar = () => setBottomSheetVisible(false);
-
-    const handleCheckboxChange = () => {
-    setIsChecked(!isChecked);
+    const addAuto = (newAuto: AutoDataBase) => {
+        setAutos((prevAutos: any) => [...prevAutos, newAuto]);
     };
 
-    const currentDate = new Date();
-
-    const formatDate = (date: Date): string => {
-    const day = date.getDate();
-    const monthNames: string[] = [
-        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-    ];
-    const month = monthNames[date.getMonth()];
-    return `${day} de ${month}`;
+    // En InicioScreen
+    const eliminarAutoDesdeLista = (id: number) => {
+        setAutos((prevAutos) => prevAutos.filter((auto) => auto.id !== id));
+        setEstacionamientosActivos((prevEstacionamientoActivo) => prevEstacionamientoActivo.filter((estacionamientoActivo) => estacionamientoActivo.auto_id !== id));
+        setEstacionamientosNoActivos((EstacionamientosNoActivos) => EstacionamientosNoActivos.filter((EstacionamientosNoActivos) => EstacionamientosNoActivos.auto_id !== id));
     };
 
-    const formatTime = (date: Date): string => {
-    const hours: number = date.getHours();
-    const minutes: number = date.getMinutes();
-    const formattedHours: string = String(hours).padStart(2, '0');
-    const formattedMinutes: string = String(minutes).padStart(2, '0');
-    return `${formattedHours}:${formattedMinutes} hs`;
+    // Función para manejar la selección de un auto
+    const handleSelectAuto = (id: number) => {
+        
     };
-
-    const formattedDate: string = formatDate(currentDate);
-    const formattedTime: string = formatTime(currentDate);
-
-    const handlePress = () => {
-        router.push('/zonas'); // Redirige a la pantalla indicada
-    };
-    
 
     return (
     <View style={styles.container}>
@@ -96,47 +131,17 @@ const InicioScreen = () => {
                 <Text style={styles.cardContent}>
                 ¿Quieres cargar un estacionamiento?
                 </Text>
-                <CustomButton title='Sí' onPress={openBottomEstacionar} style={{ width: '100%' }} />
+                <CustomButton title='Sí' onPress={handlePressEstacionamiento} style={{ width: '100%' }} />
             </View>
-            <CustomCarList />
-            <CustomEstacList/>
+            <CustomCarList autos={autos} addAuto={addAuto} eliminarAutoDesdeLista={eliminarAutoDesdeLista} mode='popup' onSelectAuto={handleSelectAuto}/>
+            <CustomEstacList estacionamientos={estacionamientosActivos}/>
             <View style={styles.card}>
                 <Text style={styles.cardContent}>¿Quieres ver la zona de estacionamiento medido y puntos de carga?</Text>
             <CustomButton title='Sí' onPress={handlePress} style={{ width: '100%' }} /> 
             </View>
             <View style={styles.cardHistory}>
-                <CustomHistoryList />
+                <CustomHistoryList estacionamientos={estacionamientosNoActivos}/>
             </View>
-            <CustomDespegable visible={isBottomSheetVisible} onClose={closeBottomEstacionar} title="Estacionamiento Medido" heightPercentage={0.75}>
-                <CustomCarList />
-                <View style={styles.containerDespegable}>
-                <Text style={styles.listText}>Día y Horario:</Text>
-                <View style={styles.containerDia_Horario}>
-                    <View style={styles.itemDia}>
-                    <Image source={require('../assets/images/calendario.png')} resizeMode="contain" style={styles.calendario} />
-                    <Text style={styles.textDia_Horario}>{formattedDate}</Text>
-                    </View>
-                    <View style={styles.itemHorario}>
-                    <Image source={require('../assets/images/clock-outline.png')} resizeMode="contain" style={styles.calendario} />
-                    <Text style={styles.textDia_Horario}>{formattedTime}</Text>
-                    </View>
-                </View>
-                <Text style={styles.listText}>Dirección:</Text>
-                <View style={styles.containerDia_Horario}>
-                    <View style={styles.itemDia}>
-                    <Image source={require('../assets/images/map-pointer.png')} resizeMode="contain" style={styles.calendario} />
-                    <Text style={styles.textDia_Horario}>15 y 155</Text>
-                    </View>
-                </View>
-                <View style={styles.containerBox}>
-                    <TouchableOpacity style={styles.checkboxContainer} onPress={handleCheckboxChange}>
-                    <View style={[styles.checkbox, isChecked && styles.checked]} />
-                    <Text style={styles.label}>Notificarme cada 1 hs</Text>
-                    </TouchableOpacity>
-                </View>
-                <CustomButton title='Empezar' onPress={openBottomEstacionar} style={{ paddingVertical: 10 }} />
-                </View>
-            </CustomDespegable>
         </ScrollView>
     </View>
     );
@@ -220,6 +225,11 @@ const styles = StyleSheet.create({
     height:'20%',
     marginBottom:16
     },
+    containerDireccion:{
+        flexDirection: 'row',
+        height:'20%',
+        marginBottom:16
+        },
     itemDia: {
     width: '60%',
     height:'70%',

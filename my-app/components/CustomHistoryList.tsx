@@ -1,43 +1,79 @@
+import { EstacionamientoDataBase } from "@/app/database/useDatabase";
 import { FlatList, View, StyleSheet, Text, Image, Dimensions} from "react-native";
 
 const { width, height } = Dimensions.get('window');
 
-export default function CustomList() {
+interface CustomEstacListProps {
+  estacionamientos: EstacionamientoDataBase[];
+}
+
+export default function CustomList({ estacionamientos }: CustomEstacListProps) {
+
+  // Función para formatear la fecha en formato YYYY-MM-DD
+  function formatDate(dateString: string | Date): string {
+    const date = new Date(dateString);
+    
+    // Verificar si la fecha es válida
+    if (isNaN(date.getTime())) {
+      console.error('Fecha no válida:', dateString);
+      return ''; // Devolver un string vacío si no es válido
+    }
+  
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  }
+
+  function formatTime(milliseconds: string | number | Date) {
+    const date = new Date(milliseconds);  // Crear un objeto Date usando los milisegundos
+    
+    const hours = date.getHours();  // Obtener las horas del día
+    const minutes = date.getMinutes();  // Obtener los minutos
+    const seconds = date.getSeconds();  // Obtener los segundos
+  
+    // Formatear los valores para que siempre tengan dos dígitos
+    const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+    return formattedTime;
+  }
+  
   return (
     <View style={styles.listContainer}>
       <Text style={styles.listText}>Historial de Estacionamientos</Text>
       <FlatList 
-        data={cars}
-        keyExtractor={(item) => item.id}
+        data={estacionamientos}
+        keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <View style={styles.item}>
             <View style={styles.contain}>
               <View style={styles.view_auto}>
                 <Image source={require('../assets/images/auto.png')} resizeMode="contain" style={styles.auto}></Image>
-                <Text style={styles.textName_Hour} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
+                <Text style={styles.textName_Hour} numberOfLines={1} ellipsizeMode="tail">{item.modelo} {item.marca}</Text>
               </View>
               <View style={styles.view_calendar}>
                 <Image source={require('../assets/images/calendario.png')} resizeMode="contain" style={styles.calendario}></Image>
-                <Text style={styles.textName_Hour}>07/10/2024</Text>
+                <Text style={styles.textName_Hour}>{formatDate(item.fecha)}</Text>
               </View>
             </View>
             <View style={styles.contain}>
               <Text style={styles.textPatent}>{item.patente}</Text>
               <View style={styles.view_calendar}>
                 <Image source={require('../assets/images/clock-outline.png')} resizeMode="contain" style={styles.reloj}></Image>
-                <Text style={styles.textName_Hour}>1h 30m 5s</Text>
+                <Text style={styles.textName_Hour}>{formatTime(item.horario)}</Text>
               </View>
             </View>
             <View style={styles.view_ubicacion}>
               <Image source={require('../assets/images/map-pointer.png')} resizeMode="contain" style={styles.ubicacion}></Image>
-              <Text style={styles.textName_Hour}>472 e/ 26 y 27</Text>
+              <Text style={styles.textName_Hour}>{item.ubicacion}</Text>
             </View>
           </View>
         )}
         ItemSeparatorComponent={() => <View style={{ paddingBottom:15}} />}
         style={{flex:1}}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={false}  // Desactiva el desplazamiento dentro del FlatList
+        scrollEnabled={true}  // Activa el desplazamiento dentro del FlatList
         nestedScrollEnabled={true} // Permite desplazamiento anidado
       />
     </View>
@@ -123,10 +159,3 @@ const styles = StyleSheet.create({
       marginTop:8,
     },
 });
-
-export const cars = [
-  { id: '1', name: 'Mercedes G 63 AMG Edition One Limited 2023', patente: '1234' },
-  { id: '2', name: 'BMW 325i', patente: '4567' },
-  { id: '3', name: 'Audi A4', patente: '2187' },
-  { id: '4', name: 'Toyota Corolla', patente: '9837' },
-];

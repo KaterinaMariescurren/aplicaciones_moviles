@@ -1,28 +1,28 @@
 // app/(map)/index.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import MapView, { Callout, Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps';
-import { View, Text, StyleSheet, Platform, TouchableOpacity, Image, Alert} from 'react-native';
+import { View, Text, StyleSheet, Platform, TouchableOpacity, Image, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { markers } from '@/assets/markers';
 import polygonsData from '../assets/poligono.json';
 
 export default function Zonas() {
-    const mapRef = useRef <MapView>();
+    const mapRef = useRef<MapView>();
     const [hasLocationPermission, setHasLocationPermission] = useState(false);
     const [showPolygons, setShowPolygons] = useState(true);
     const [showMarker, setShowMarker] = useState(false);
 
     useEffect(() => {
-            
+
         (async () => {
             const { status } = await Location.requestForegroundPermissionsAsync();
             setHasLocationPermission(status === 'granted');
-    
+
             if (status === 'granted') {
                 const userLocation = await Location.getCurrentPositionAsync({});
                 const region = {
-                    latitude:-34.871028, 
-                    longitude:-58.045958,
+                    latitude: -34.871028,
+                    longitude: -58.045958,
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                 };
@@ -40,16 +40,26 @@ export default function Zonas() {
     };
 
     const handlePolygonPress = (index: number) => {
-        Alert.alert("En Horario", 'Precio por hora: $100');
+        const message = `
+        🕖 De 07:00 a 10:00 hs: 
+        💲 Precio por hora: $150
+        
+        🕙 De 10:00 a 14:00 hs: 
+        💲 Precio por hora: $200
+        
+        🕒 De 14:00 a 18:00 hs: 
+        💲 Precio por hora: $250
+    `;
+        Alert.alert("Precios por franja horaria", message, [{ text: "Cerrar" }], { cancelable: true });
     };
 
-    return(
+    return (
         <View style={{ flex: 1 }}>
-            <MapView 
-            style={StyleSheet.absoluteFill}
-            provider={Platform.OS === 'android' ? 'google' : undefined}
-            showsUserLocation={hasLocationPermission} //Ubicacion del Usuario
-            ref={mapRef} >
+            <MapView
+                style={StyleSheet.absoluteFill}
+                provider={Platform.OS === 'android' ? 'google' : undefined}
+                showsUserLocation={hasLocationPermission} //Ubicacion del Usuario
+                ref={mapRef} >
 
                 {/* Renderizar el marcador solo si showMarker es verdadero  */}
                 {showMarker && markers.map((marker, index) => (
@@ -66,13 +76,13 @@ export default function Zonas() {
                 {/* Renderizar polígonos solo si `showPolygons` es verdadero */}
                 {showPolygons && polygonsData.features.map((feature, index) => (
                     <Polygon
-                        key={index} 
+                        key={index}
                         coordinates={convertCoordinates(feature.geometry.coordinates)}
-                        strokeColor="#FF4500" 
-                        fillColor="rgba(255, 69, 0, 0.3)" 
-                        strokeWidth={1} 
-                        tappable 
-                        onPress={() => handlePolygonPress(index)} 
+                        strokeColor="#FF4500"
+                        fillColor="rgba(255, 69, 0, 0.3)"
+                        strokeWidth={1}
+                        tappable
+                        onPress={() => handlePolygonPress(index)}
                     />
                 ))}
             </MapView>
@@ -117,9 +127,9 @@ const styles = StyleSheet.create({
         bottom: 20,
         left: 20,
         right: 20,
-        flexDirection: 'column', 
-        justifyContent: 'space-between', 
-        gap: 10, 
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        gap: 10,
     },
     button: {
         paddingVertical: 12,
@@ -138,17 +148,17 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         letterSpacing: 1,
-    },   
+    },
     calloutContainer: {
-        width: 150, 
+        width: 150,
         padding: 10,
         backgroundColor: 'white',
         borderRadius: 5,
-        elevation: 2, 
+        elevation: 2,
     },
     calloutText: {
         fontSize: 18,
-        textAlign: 'center', 
-    }, 
+        textAlign: 'center',
+    },
 });
 
