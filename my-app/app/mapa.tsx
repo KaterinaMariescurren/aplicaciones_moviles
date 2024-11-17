@@ -1,47 +1,54 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, Alert, Linking, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router'; 
+import { useRouter } from 'expo-router';
 import { useEstacionamiento } from './EstacionamientoContext';
 import { useDatabase } from '@/app/database/useDatabase';
 import MapView, { Marker } from 'react-native-maps';  // Importa MapView y Marker
+import GoogleMapsRedirectButton from '@/components/GoogleMapsButton';
 
 const Mapa = () => {
-    const router = useRouter();
-    const { estacionamientoId } = useEstacionamiento(); // Obtiene el id del estacionamiento desde el contexto
-    const database = useDatabase();
+  const router = useRouter();
+  const { estacionamientoId } = useEstacionamiento(); // Obtiene el id del estacionamiento desde el contexto
+  const database = useDatabase();
 
-    const [estacionamiento, setEstacionamiento] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+  const [estacionamiento, setEstacionamiento] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-    const openSEMApp = async () => {
-        const appPackageName = 'ar.edu.unlp.semmobile.laplata'; // Nombre del paquete de SEM
-        const playStoreUrl = `https://play.google.com/store/apps/details?id=${appPackageName}`;
+  const openSEMApp = async () => {
+    const appPackageName = 'ar.edu.unlp.semmobile.laplata'; // Nombre del paquete de SEM
+    const playStoreUrl = `https://play.google.com/store/apps/details?id=${appPackageName}`;
 
-        try {
-            if (estacionamientoId !== null) {
-            const data = await (await database).setActivoToZero(estacionamientoId); }
-        // Verificar si la app está instalada en el dispositivo
-        const isAppInstalled = await Linking.canOpenURL(`package: SEM La Plata`);
+    try {
+      if (estacionamientoId !== null) {
+        const data = await (await database).setActivoToZero(estacionamientoId);
+      }
 
-        if (isAppInstalled) {
-            // Si la app está instalada, abrir SEM
-            console.log('SEM está instalada. Abriendo la app...');
-            Linking.openURL(`package:${appPackageName}`);
-        } else {
-            // Si la app no está instalada, redirigir a la Play Store
-            console.log('SEM no está instalada. Redirigiendo a la Play Store...');
-            Linking.openURL(playStoreUrl);
-            Alert.alert('App no instalada', 'Redirigiendo a la Play Store...');
-        }
-        } catch (error) {
-        console.error("Error al intentar abrir SEM:", error);
-        Alert.alert('Error', 'Hubo un problema al intentar abrir la app.');
-        }
-    };
+      // Verificar si la app está instalada en el dispositivo
+      const isAppInstalled = await Linking.canOpenURL(`package:SEM La Plata`);
 
-    useEffect(() => {
+      if (isAppInstalled) {
+        // Si la app está instalada, abrir SEM
+        console.log('SEM está instalada. Abriendo la app...');
+        Linking.openURL(`package:${appPackageName}`);
+
+        // Después de abrir la app, espera a que regrese a tu app
+        router.push('/');  // Navega a la pantalla principal (index.tsx)
+      } else {
+        // Si la app no está instalada, redirigir a la Play Store
+        console.log('SEM no está instalada. Redirigiendo a la Play Store...');
+        Linking.openURL(playStoreUrl);
+        Alert.alert('App no instalada', 'Redirigiendo a la Play Store...');
+      }
+    } catch (error) {
+      console.error('Error al intentar abrir SEM:', error);
+      Alert.alert('Error', 'Hubo un problema al intentar abrir la app.');
+    }
+  };
+
+
+  useEffect(() => {
     const fetchEstacionamiento = async () => {
-        try {
+      try {
         if (estacionamientoId !== null) { // Verificación explícita de que estacionamientoId no es null
           // Obtener datos del estacionamiento por ID
           const data = await (await database).getEstacionamientoById(estacionamientoId);
@@ -68,6 +75,7 @@ const Mapa = () => {
   if (!estacionamiento) {
     return <Text>No se encontró el estacionamiento.</Text>;
   }
+
 
   return (
     <View style={styles.container}>
@@ -98,6 +106,9 @@ const Mapa = () => {
         <TouchableOpacity style={styles.button} onPress={openSEMApp}>
           <Text style={styles.buttonText}>Finalizar estacionamiento</Text>
         </TouchableOpacity>
+        <GoogleMapsRedirectButton
+          estacionamientoLatitude={estacionamiento.latitude}
+          estacionamientoLongitude={estacionamiento.longitude} />
       </View>
     </View>
   );

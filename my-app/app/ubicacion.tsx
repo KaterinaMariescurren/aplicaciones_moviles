@@ -45,14 +45,14 @@ const CheckLocationInPolygonScreen = () => {
   const polygon4 = turf.polygon([polygon4Coords]);
 
   // Calculamos la diferencia entre los polígonos 9 y 4 (el área entre ellos)
-  const differencePolygon = turf.difference(turf.featureCollection([polygon4,polygon9])); // Este es el polígono entre los dos
+  const differencePolygon = turf.difference(turf.featureCollection([polygon4, polygon9])); // Este es el polígono entre los dos
 
   // Si la diferencia es nula, no mostramos nada
   const differencePolygonCoords = differencePolygon
     ? differencePolygon.geometry.coordinates[0].map(([longitude, latitude]) => ({
-        latitude,
-        longitude,
-      }))
+      latitude,
+      longitude,
+    }))
     : [];
 
   const handleMapPress = (event: MapPressEvent) => {
@@ -98,23 +98,23 @@ const CheckLocationInPolygonScreen = () => {
       router.back(); // Regresa sin enviar datos si no hay ubicación
     }
   };
-  
+
 
   // Detectar cuando el usuario presiona el botón de retroceso
   useFocusEffect(
     React.useCallback(() => {
-        const onBackPress = () => {
-            handleGoBack(); // Llama a `handleGoBack` en lugar de `router.back()`
-            return true; // Prevenir comportamiento predeterminado
-        };
+      const onBackPress = () => {
+        handleGoBack(); // Llama a `handleGoBack` en lugar de `router.back()`
+        return true; // Prevenir comportamiento predeterminado
+      };
 
-        BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-        return () => {
-            BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-        };
+      return () => {
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+      };
     }, [selectedLocation])
-);
+  );
 
 
   return (
