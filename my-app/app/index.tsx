@@ -107,11 +107,17 @@ const InicioScreen = () => {
         setAutos((prevAutos: any) => [...prevAutos, newAuto]);
     };
 
-    // Función para manejar la selección de un auto
-    const handleSelectAuto = (id: number) => {
-        alert
+    // En InicioScreen
+    const eliminarAutoDesdeLista = (id: number) => {
+        setAutos((prevAutos) => prevAutos.filter((auto) => auto.id !== id));
+        setEstacionamientosActivos((prevEstacionamientoActivo) => prevEstacionamientoActivo.filter((estacionamientoActivo) => estacionamientoActivo.auto_id !== id));
+        setEstacionamientosNoActivos((EstacionamientosNoActivos) => EstacionamientosNoActivos.filter((EstacionamientosNoActivos) => EstacionamientosNoActivos.auto_id !== id));
     };
 
+    // Función para manejar la selección de un auto
+    const handleSelectAuto = (id: number) => {
+        
+    };
 
     return (
     <View style={styles.container}>
@@ -127,7 +133,7 @@ const InicioScreen = () => {
                 </Text>
                 <CustomButton title='Sí' onPress={handlePressEstacionamiento} style={{ width: '100%' }} />
             </View>
-            <CustomCarList autos={autos} addAuto={addAuto} mode='popup' onSelectAuto={handleSelectAuto}/>
+            <CustomCarList autos={autos} addAuto={addAuto} eliminarAutoDesdeLista={eliminarAutoDesdeLista} mode='popup' onSelectAuto={handleSelectAuto}/>
             <CustomEstacList estacionamientos={estacionamientosActivos}/>
             <View style={styles.card}>
                 <Text style={styles.cardContent}>¿Quieres ver la zona de estacionamiento medido y puntos de carga?</Text>

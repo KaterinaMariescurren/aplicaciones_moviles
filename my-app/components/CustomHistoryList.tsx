@@ -8,6 +8,37 @@ interface CustomEstacListProps {
 }
 
 export default function CustomList({ estacionamientos }: CustomEstacListProps) {
+
+  // Función para formatear la fecha en formato YYYY-MM-DD
+  function formatDate(dateString: string | Date): string {
+    const date = new Date(dateString);
+    
+    // Verificar si la fecha es válida
+    if (isNaN(date.getTime())) {
+      console.error('Fecha no válida:', dateString);
+      return ''; // Devolver un string vacío si no es válido
+    }
+  
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  }
+
+  function formatTime(milliseconds: string | number | Date) {
+    const date = new Date(milliseconds);  // Crear un objeto Date usando los milisegundos
+    
+    const hours = date.getHours();  // Obtener las horas del día
+    const minutes = date.getMinutes();  // Obtener los minutos
+    const seconds = date.getSeconds();  // Obtener los segundos
+  
+    // Formatear los valores para que siempre tengan dos dígitos
+    const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+    return formattedTime;
+  }
+  
   return (
     <View style={styles.listContainer}>
       <Text style={styles.listText}>Historial de Estacionamientos</Text>
@@ -23,14 +54,14 @@ export default function CustomList({ estacionamientos }: CustomEstacListProps) {
               </View>
               <View style={styles.view_calendar}>
                 <Image source={require('../assets/images/calendario.png')} resizeMode="contain" style={styles.calendario}></Image>
-                <Text style={styles.textName_Hour}>{item.activo}</Text>
+                <Text style={styles.textName_Hour}>{formatDate(item.fecha)}</Text>
               </View>
             </View>
             <View style={styles.contain}>
               <Text style={styles.textPatent}>{item.patente}</Text>
               <View style={styles.view_calendar}>
                 <Image source={require('../assets/images/clock-outline.png')} resizeMode="contain" style={styles.reloj}></Image>
-                <Text style={styles.textName_Hour}>{item.horario}</Text>
+                <Text style={styles.textName_Hour}>{formatTime(item.horario)}</Text>
               </View>
             </View>
             <View style={styles.view_ubicacion}>
@@ -42,7 +73,7 @@ export default function CustomList({ estacionamientos }: CustomEstacListProps) {
         ItemSeparatorComponent={() => <View style={{ paddingBottom:15}} />}
         style={{flex:1}}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={false}  // Desactiva el desplazamiento dentro del FlatList
+        scrollEnabled={true}  // Activa el desplazamiento dentro del FlatList
         nestedScrollEnabled={true} // Permite desplazamiento anidado
       />
     </View>

@@ -28,9 +28,9 @@ export default function estacionamiento() {
 
     const [ubicacionState, setUbicacion] = useState<string>("");
 
-    async function listAuto() {
+    async function listAutoNoEstacionados() {
         try {
-        const response = await (await database).listAuto();
+        const response = await (await database).listAutosNoEstacionados();
         if (response) {
             setAutos(response);
         }
@@ -137,7 +137,7 @@ export default function estacionamiento() {
     
     useEffect(() => {
         console.log('Autos:');
-        listAuto();
+        listAutoNoEstacionados();
 
         if (location) {
             try {
@@ -150,103 +150,147 @@ export default function estacionamiento() {
         }
     }, [location]);
 
-    return(
+    return (
         <View style={styles.container}>
-            <CustomCarList autos={autos} addAuto={addAuto} mode='selection' onSelectAuto={handleSelectAuto}/>
-                <View style={styles.containerDespegable}>
-                <Text style={styles.listText}>Día y Horario:</Text>
-                <View style={styles.containerDia_Horario}>
-                    <View style={styles.itemDia}>
-                    <Image source={require('../assets/images/calendario.png')} resizeMode="contain" style={styles.calendario} />
-                    <Text style={styles.textDia_Horario}>{formattedDate}</Text>
-                    </View>
-                    <View style={styles.itemHorario}>
-                    <Image source={require('../assets/images/clock-outline.png')} resizeMode="contain" style={styles.calendario} />
-                    <Text style={styles.textDia_Horario}>{formattedTime}</Text>
-                    </View>
-                </View>
-                {/* Campo para ingresar dirección */}
-                <Text style={styles.listText}>Dirección:</Text>
-                        <View style={styles.containerDireccion}>
-                            <View style={styles.itemDia}>
-                                <Text style={styles.textDia_Horario}>{ubicacionState}</Text>
-                            </View>
-                            <CustomButton title='Ubicacion' onPress={handlePressUbicacion} style={{ height:'70%', marginLeft:25, width:'100%'}}></CustomButton>
-                        </View>
-                <CustomButton title='Empezar' onPress={createEstacionamiento} style={{ paddingVertical: 10 }} />
-                </View>
+          {/* Lista personalizada de autos */}
+          <CustomCarList 
+            autos={autos} 
+            addAuto={addAuto} 
+            mode="selection" 
+            onSelectAuto={handleSelectAuto}
+          />
+      
+          <View style={styles.containerDespegable}>
+            {/* Información de Día y Horario */}
+            <Text style={styles.listText}>Día y Horario:</Text>
+            <View style={styles.containerDia_Horario}>
+              {/* Día */}
+              <View style={styles.itemDia}>
+                <Image 
+                  source={require('../assets/images/calendario.png')} 
+                  resizeMode="contain" 
+                  style={styles.calendario} 
+                />
+                <Text style={styles.textDia_Horario}>{formattedDate}</Text>
+              </View>
+      
+              {/* Horario */}
+              <View style={styles.itemHorario}>
+                <Image 
+                  source={require('../assets/images/clock-outline.png')} 
+                  resizeMode="contain" 
+                  style={styles.calendario} 
+                />
+                <Text style={styles.textDia_Horario}>{formattedTime}</Text>
+              </View>
+            </View>
+      
+            {/* Campo para ingresar Dirección */}
+            <Text style={styles.listText}>Dirección:</Text>
+            <View style={styles.containerDireccion}>
+              <View style={styles.itemUbicacion}>
+                <Text style={styles.textDia_Horario}>{ubicacionState}</Text>
+              </View>
+              <CustomButton 
+                title="Ubicacion" 
+                onPress={handlePressUbicacion} 
+                style={{ paddingVertical: 10, marginTop: 40}} 
+              />
+            </View>
+      
+            {/* Botón de Empezar */}
+            <CustomButton 
+              title="Empezar" 
+              onPress={createEstacionamiento} 
+              style={{ paddingVertical: 10 }} 
+            />
+          </View>
         </View>
-    );
+      );      
 }
-
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Hace que el contenedor ocupe toda la pantalla
-        },
+      flex: 1, // Hace que el contenedor ocupe toda la pantalla
+    },
     containerDespegable: {
-        flex: 1,
-        paddingHorizontal: 25,
-        marginBottom: 16,
+      flex: 1,
+      paddingHorizontal: 20,
+      marginVertical: 20,
     },
     containerDia_Horario: {
-        flexDirection: 'row',
-        height: '20%',
-        marginBottom: 16,
+      flexDirection: 'row',
+      height: '20%',
     },
     containerDireccion: {
-        flexDirection: 'row',
-        height: '20%',
-        marginBottom: 16,
+      height: '50%',
+      marginBottom: 16,
     },
     itemDia: {
-        width: '60%',
-        height: '70%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: 'row',
-        marginRight: 10,
-        backgroundColor: '#ffffff',
-        borderRadius: 16.94,
-        borderWidth: 0.3,
-        borderColor: '#656CEE',
-        shadowColor: '#8B91FC1A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
+      width: '60%',
+      height: '70%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'row',
+      marginRight: 10,
+      backgroundColor: '#ffffff',
+      borderRadius: 17,
+      borderWidth: 0.3,
+      borderColor: '#656CEE',
+      shadowColor: '#8B91FC1A',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 5,
     },
     itemHorario: {
-        width: '40%',
-        height: '70%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: 'row',
-        marginRight: 10,
-        backgroundColor: '#ffffff',
-        borderRadius: 16.94,
-        borderWidth: 0.3,
-        borderColor: '#656CEE',
-        shadowColor: '#8B91FC1A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
+      width: '40%',
+      height: '70%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'row',
+      marginRight: 10,
+      backgroundColor: '#ffffff',
+      borderRadius: 17,
+      borderWidth: 0.3,
+      borderColor: '#656CEE',
+      shadowColor: '#8B91FC1A',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    itemUbicacion: {
+      height: '30%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'row',
+      marginRight: 10,
+      backgroundColor: '#ffffff',
+      borderRadius: 17,
+      borderWidth: 0.3,
+      borderColor: '#656CEE',
+      shadowColor: '#8B91FC1A',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 5,
     },
     calendario: {
-        width: 20,
-        height: 20,
-        marginRight: 10,
+      width: 20,
+      height: 20,
+      marginRight: 10,
     },
     textDia_Horario: {
-        color: '#656CEE',
-        fontSize: 15.81,
+      color: '#656CEE',
+      fontSize: 15,
     },
     listText: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        color: '#203D65',
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: 5,
+      color: '#203D65',
     },
 });
+  
 

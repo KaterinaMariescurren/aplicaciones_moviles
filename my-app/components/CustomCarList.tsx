@@ -12,28 +12,37 @@ const { width, height } = Dimensions.get('window');
 interface CustomCarListProps {
   autos: AutoDataBase[]; // Tipo de la lista de autos
   addAuto: (newAuto: AutoDataBase) => void; // Tipo de la función para agregar un auto
+  eliminarAutoDesdeLista?: (id:number) => void
   mode: "popup" | "selection"; // Modo de la lista (emergente o selección)
   onSelectAuto: (id: number) => void; // Función para manejar la selección de un auto
 }
 
-export default function CustomCarList({ autos, addAuto, mode, onSelectAuto }: CustomCarListProps) {
+export default function CustomCarList({ autos, addAuto, mode, onSelectAuto, eliminarAutoDesdeLista }: CustomCarListProps) {
   const database = useDatabase();
   
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
   const [patente, setPatente ] = useState("");
 
+  const [modeBoton, setModeBoton ] = useState(false);
+
   // Estados para el manejo del bottom sheet y el auto seleccionado
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [selectedAuto, setSelectedAuto] = useState<AutoDataBase | null>(null);
   
   // Funciones para abrir y cerrar el bottom sheet
-  const openBottomSheet = () => setBottomSheetVisible(true);
-  const closeBottomSheet = () => {
-    setBottomSheetVisible(false);
+  const openBottomSheet = () => {
     setMarca("");
     setModelo("");
     setPatente("");
+    setModeBoton(false);
+    setBottomSheetVisible(true); // Show the bottom sheet
+  };
+  
+  // Cerrar el bottom sheet
+  const closeBottomSheet = () => {
+    setBottomSheetVisible(false);
+    setSelectedAuto(null); // Reiniciar el auto seleccionado
   };
 
   // Función para crear un nuevo auto
@@ -55,13 +64,41 @@ export default function CustomCarList({ autos, addAuto, mode, onSelectAuto }: Cu
     }
   }
 
+  // Función para eliminar un auto
+  async function eliminarAuto(){
+    try {
+
+      if (!selectedAuto) {
+        Alert.alert("No hay auto seleccionado");
+        return;
+      }
+      if (!eliminarAutoDesdeLista) {
+        Alert.alert("No hay funcion para eliminar");
+        return;
+      }
+      console.log("Eliminando Auto");
+      await (await database).eliminarAuto(selectedAuto.id);
+      
+      // Llama a la función recibida como prop para actualizar la lista
+      eliminarAutoDesdeLista(selectedAuto.id);
+    } catch (error) {
+      console.error("Error al eliminar el auto", error);
+      Alert.alert("Error al eliminar el auto");
+    }
+  }
+
   // Maneja la selección de un auto
   const handleItemPress = (item: AutoDataBase) => {
+    setSelectedAuto(item); // Asegúrate de actualizar el auto seleccionado correctamente.
     if (mode === "popup") {
-      // Lógica para el modo "popup" si es necesario
+      // Si el modo es popup, abre el bottom sheet directamente
+      setMarca(item.marca);
+      setModelo(item.modelo);
+      setPatente(item.patente);
+      setModeBoton(true); // Habilita el botón de eliminar
+      setBottomSheetVisible(true); // Muestra el bottom sheet
     } else if (mode === "selection") {
-      setSelectedAuto(item); // Actualiza el estado del auto seleccionado
-      onSelectAuto(item.id);  // Llama a la función onSelectAuto para pasar el id del auto
+      onSelectAuto(item.id); // Llama a la función onSelectAuto para pasar el id del auto
     }
   };
 
@@ -154,8 +191,22 @@ export default function CustomCarList({ autos, addAuto, mode, onSelectAuto }: Cu
             value={patente}
             onChangeText={setPatente}
           />
-          <CustomButton title="Agregar" onPress={() => {createAuto();closeBottomSheet();}}  
-          style={{marginVertical:30, height:'35%',}}></CustomButton>
+          <CustomButton
+            title={mode === "popup" && modeBoton===true ? "Eliminar" : "Agregar"}
+            onPress={() => {
+              if (mode === "popup" && modeBoton===true) {
+                // Aquí llamas a la función para eliminar el auto
+                eliminarAuto();
+                closeBottomSheet();
+              } else {
+                // Aquí llamas a la función para agregar un auto
+                createAuto();
+                closeBottomSheet();
+              }
+            }}
+            style={{ marginVertical: 30, height: '35%' }}
+          />
+          
         </View>
       </CustomDespegable>
     </View>

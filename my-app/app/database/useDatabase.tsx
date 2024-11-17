@@ -66,6 +66,32 @@ export async function useDatabase(){
         }
     }
 
+    async function eliminarAuto(autoId: number): Promise<boolean> {
+        try {
+            // Primero, eliminamos los estacionamientos asociados al auto
+            const deleteEstacionamientosStatement = await database.prepareAsync(
+                "DELETE FROM estacionamiento WHERE auto_id = $autoId"
+            );
+            await deleteEstacionamientosStatement.executeAsync({
+                $autoId: autoId,
+            });
+    
+            // Ahora, eliminamos el auto
+            const deleteAutoStatement = await database.prepareAsync(
+                "DELETE FROM auto WHERE id = $autoId"
+            );
+            const result = await deleteAutoStatement.executeAsync({
+                $autoId: autoId,
+            });
+    
+            // Si result.changes > 0, significa que se eliminó el auto
+            return result.changes > 0;
+        } catch (error) {
+            console.error('Error al eliminar el auto y los estacionamientos:', error);
+            return false;
+        }
+    }
+
     async function createEstacionamiento(data: Omit<EstacionamientoDataBase, "id">) {
         const statement = await database.prepareAsync(
             `INSERT INTO estacionamiento 
@@ -124,8 +150,6 @@ export async function useDatabase(){
         }
     }
     
-
-
     async function listAuto(): Promise<AutoDataBase[]> {
         try {
           const query = "SELECT * from auto";
@@ -137,6 +161,23 @@ export async function useDatabase(){
         }
     }
 
+    async function listAutosNoEstacionados(): Promise<AutoDataBase[]> {
+        try {
+            const query = `
+                SELECT auto.* 
+                FROM auto
+                LEFT JOIN estacionamiento 
+                ON auto.id = estacionamiento.auto_id AND estacionamiento.activo = 1
+                WHERE estacionamiento.id IS NULL
+            `;
+            const results = await database.getAllAsync<AutoDataBase>(query);
+            return results ?? [];
+        } catch (error) {
+            console.error('Error al listar autos no en estacionamiento activo:', error);
+            return []; // Devuelve un array vacío en caso de error
+        }
+    }
+    
     async function listEstacionamientosActivos(): Promise<EstacionamientoDataBase[]> {
         try {
             const query = `
@@ -169,5 +210,5 @@ export async function useDatabase(){
         }
     }
 
-    return {createAuto, createEstacionamiento, listAuto, listEstacionamientosActivos, listEstacionamientosNoActivos, getEstacionamientoById, setActivoToZero }
+    return {createAuto, eliminarAuto, createEstacionamiento, listAuto, listAutosNoEstacionados, listEstacionamientosActivos, listEstacionamientosNoActivos, getEstacionamientoById, setActivoToZero }
 }
